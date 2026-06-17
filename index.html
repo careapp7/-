@@ -908,7 +908,7 @@
         <i data-lucide="home"></i> ホーム
       </button>
       <button class="nav-tab" onclick="switchTab('create')" id="tab-create">
-        <i data-lucide="pen-tool"></i> 文面作成
+        <i data-lucide="pen-tool"></i> 下書きサポート
       </button>
       <button class="nav-tab" onclick="switchTab('check')" id="tab-check">
         <i data-lucide="shield-alert"></i> 送信前チェック
@@ -924,7 +924,7 @@
         <h2>占い師のための営業・鑑定サポート文作成ツール</h2>
         <p>JavaScriptによる高速なローカル判定エンジンを搭載。外部へのデータ送信なしで、安全に営業・フォローメッセージの作成や法的リスクチェックを行えます。</p>
         <button class="btn btn-primary" onclick="switchTab('create')">
-          営業・フォロー文を作成する <i data-lucide="arrow-right"></i>
+          下書きをチェックして整える <i data-lucide="arrow-right"></i>
         </button>
       </div>
 
@@ -935,7 +935,7 @@
         </div>
         <div class="stat-card">
           <div class="stat-value" id="stat-count-created">0</div>
-          <div class="stat-label">累計文面作成数</div>
+          <div class="stat-label">累計下書きサポート数</div>
         </div>
         <div class="stat-card">
           <div class="stat-value" id="stat-count-checked">0</div>
@@ -980,8 +980,11 @@
     <!-- ==================== CREATE PAGE ==================== -->
     <div class="page" id="page-create">
       <div class="glass-panel">
-        <h2><i data-lucide="pen-tool"></i> 営業・フォロー文面作成</h2>
-        
+        <h2><i data-lucide="pen-tool"></i> 下書きサポート</h2>
+        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px; line-height: 1.7;">
+          この画面は、先生がご自身で書いた下書きをベースに整えるための場所です。完成文を自動作成するのではなく、先生らしい語り口を残したまま、送信前に注意したい表現だけを確認します。
+        </p>
+
         <!-- Theme Selection -->
         <div class="form-group">
           <label class="form-label">相談テーマ<span>(複数選択不可)</span></label>
@@ -1026,33 +1029,47 @@
           </div>
         </div>
 
-        <!-- Details / Situation -->
+        <!-- Draft Input -->
         <div class="form-group">
-          <label class="form-label" for="create-situation">相談者の状況・顧客との具体的な関係・盛り込みたい状況 <span>(任意ですが、詳しく入力すると精度が上がります)</span></label>
-          <textarea id="create-situation" placeholder="例：彼から1ヶ月LINEが未読無視されている状態で悩んでいる。彼の本音や今後の展開を視る鑑定を提案し、寄り添う内容にしたい。"></textarea>
+          <label class="form-label" for="create-draft-text">先生の下書き本文 <span>(ここに先生ご自身の言葉で作成した文章を貼り付けてください)</span></label>
+          <textarea id="create-draft-text" style="min-height: 180px;" placeholder="例：〇〇さん、先ほどは鑑定ありがとうございました。彼の気持ちについて、まだ整理しきれていないものを感じます。必要であれば、次の流れも一緒に見ていきましょう。"></textarea>
         </div>
 
-        <button class="btn btn-primary btn-block" id="btn-generate-text" onclick="generateText()">
-          <i data-lucide="sparkles"></i> 営業文を自動生成する
-        </button>
+        <!-- Optional situation for hints -->
+        <div class="form-group">
+          <label class="form-label" for="create-situation">補足メモ <span>(任意。下書きの目的や入れたい内容をメモできます)</span></label>
+          <textarea id="create-situation" style="min-height: 80px;" placeholder="例：彼から1ヶ月LINEが未読。鑑定後フォローとして、焦らず寄り添う案内にしたい。"></textarea>
+        </div>
+
+        <div class="action-row" style="justify-content: space-between; align-items: center; width: 100%;">
+          <button class="btn btn-secondary" id="btn-generate-text" onclick="generateText()">
+            <i data-lucide="lightbulb"></i> 書き方ヒントを見る
+          </button>
+          <button class="btn btn-primary" onclick="polishDraftFromCreate()">
+            <i data-lucide="shield-check"></i> 下書きをチェックして整える
+          </button>
+        </div>
       </div>
 
       <!-- Loading Indicator -->
       <div class="spinner-container" id="create-loading">
         <div class="spinner"></div>
-        <div class="spinner-text">鑑定結果を元に、最良のメッセージを紡いでいます...</div>
+        <div class="spinner-text">下書きの構成ヒントを整理しています...</div>
       </div>
 
       <!-- Generation Result Panel -->
       <div class="glass-panel" id="create-result-panel" style="display: none;">
-        <h2><i data-lucide="file-text"></i> 生成された文面</h2>
+        <h2><i data-lucide="file-text"></i> 書き方ヒント・参考フレーズ</h2>
+        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 12px; line-height: 1.7;">
+          そのまま送る完成文ではなく、先生の下書きを作るための参考です。必要な部分だけ取り入れてください。
+        </p>
         <div class="result-box" id="generated-text-content"></div>
         <div class="action-row">
           <button class="btn btn-secondary" onclick="copyGeneratedText()">
-            <i data-lucide="copy"></i> コピーする
+            <i data-lucide="copy"></i> ヒントをコピーする
           </button>
-          <button class="btn btn-gold" id="btn-create-to-check" onclick="sendToCheckAndAnalyze()">
-            <i data-lucide="shield-alert"></i> このまま送信前チェックにかける
+          <button class="btn btn-gold" id="btn-create-to-check" onclick="polishDraftFromCreate()">
+            <i data-lucide="shield-alert"></i> 下書きをチェックする
           </button>
         </div>
       </div>
@@ -1063,17 +1080,17 @@
       <div class="glass-panel">
         <h2><i data-lucide="shield-alert"></i> 送信前リスクチェック・改善案作成</h2>
         <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">
-          送信前の文章を入力してください。法的なリスク（景表法、不安煽り等）をルールベースで判定し、先生のキャラクターや文体、余韻をそのまま活かした「安全な改善案」を作成します。
+          先生ご自身で作成した下書き、または送信予定の文章を入力してください。ルールベースでリスクを確認し、原文の語り口をできるだけ残した最小修正案を作成します。
         </p>
         <div class="form-group">
-          <textarea id="check-input-text" placeholder="ここにチェックしたい文面を貼り付けてください。"></textarea>
+          <textarea id="check-input-text" placeholder="ここに先生の下書き・送信予定文を貼り付けてください。"></textarea>
         </div>
         <div class="action-row" style="justify-content: space-between; align-items: center; width: 100%;">
           <button class="btn btn-secondary btn-sm" onclick="clearCheckInput()">
             クリア
           </button>
           <button class="btn btn-primary" id="btn-check-risk" onclick="checkRisk()">
-            リスク診断 ＆ 改善案を作成する <i data-lucide="shield-check"></i>
+            下書きをチェックして整える <i data-lucide="shield-check"></i>
           </button>
         </div>
       </div>
@@ -1105,9 +1122,9 @@
 
         <!-- Before / After Optimization -->
         <div class="glass-panel">
-          <h2><i data-lucide="git-compare"></i> 改善案作成 (After文)</h2>
+          <h2><i data-lucide="git-compare"></i> 下書きの最小修正案</h2>
           <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">
-            <i data-lucide="check-circle" style="color: var(--risk-safe); display:inline-block; vertical-align: middle; width:14px; height:14px;"></i> 先生らしさ（文体、感情描写、余韻の「…かもしれなくて。」など）を活かしたまま、問題箇所のみ最小限に書き換えを行いました。
+            <i data-lucide="check-circle" style="color: var(--risk-safe); display:inline-block; vertical-align: middle; width:14px; height:14px;"></i> 先生の下書きをベースに、問題箇所のみ最小限に置き換えた参考案です。最後は先生ご自身の言葉で調整してください。
           </div>
           
           <div class="before-after-layout">
@@ -1116,14 +1133,18 @@
               <div class="result-box panel-before" id="panel-before-text"></div>
             </div>
             <div>
-              <h3 style="color: var(--risk-safe);">After (改善案)</h3>
+              <h3 style="color: var(--risk-safe);">参考After (最小修正案)</h3>
               <div class="result-box panel-after" id="panel-after-text"></div>
+              <div class="form-group" style="margin-top: 16px;">
+                <label class="form-label" for="final-edit-text">最終文 <span>(先生ご自身で最後に調整してからコピーしてください)</span></label>
+                <textarea id="final-edit-text" style="min-height: 180px;"></textarea>
+              </div>
               <div class="action-row">
                 <button class="btn btn-secondary btn-sm" onclick="saveTemplateFromCheck()">
-                  <i data-lucide="folder-plus"></i> テンプレとして保存
+                  <i data-lucide="folder-plus"></i> 最終文をテンプレ保存
                 </button>
                 <button class="btn btn-gold btn-sm" onclick="copyImprovedText()">
-                  <i data-lucide="copy"></i> After文をコピーする
+                  <i data-lucide="copy"></i> 最終文をコピーする
                 </button>
               </div>
             </div>
@@ -1151,7 +1172,7 @@
         <div id="templates-empty-state" style="display: none; text-align: center; padding: 40px 0; color: var(--text-muted);">
           <i data-lucide="folder-open" style="width: 48px; height: 48px; margin-bottom: 12px; opacity: 0.5;"></i>
           <p>保存されたテンプレートがありません。</p>
-          <p style="font-size: 12px; margin-top: 4px;">文面作成やリスクチェックから保存できます。</p>
+          <p style="font-size: 12px; margin-top: 4px;">下書きチェックやリスクチェックから保存できます。</p>
         </div>
       </div>
     </div>
@@ -1524,17 +1545,77 @@
     // offline text generation engine
     // -------------------------------------------------------------
     function clientSideGenerateText(theme, purpose, style, situation) {
-      const opening = GenerationTemplates.openings[purpose]?.[style] || GenerationTemplates.openings[purpose]?.["やさしい"];
-      const body = GenerationTemplates.bodies[theme] || "";
-      const closing = GenerationTemplates.closings[style] || GenerationTemplates.closings["やさしい"];
+      const purposeHints = {
+        "初回営業": ["最初に軽く挨拶する", "相談者の状況に決めつけず寄り添う", "必要であれば相談できる、という任意の案内で締める"],
+        "鑑定後フォロー": ["鑑定へのお礼を入れる", "相談者の気持ちを受け止める", "鑑定で感じたことは主観表現にする", "必要に応じた再相談案内に留める"],
+        "再鑑定案内": ["その後の様子をやわらかく尋ねる", "不安を煽らず、状況整理の提案にする", "ご都合の良いタイミングで、という任意性を入れる"],
+        "施術案内": ["開封前の無料訴求や特典予告は避ける", "ご希望があれば、という同意前提にする", "効果の保証や反復必須の表現は避ける"],
+        "待機開始案内": ["待機開始の事実を短く伝える", "不安を刺激せず、話したい時の入口として案内する", "今すぐ感を強めすぎない"],
+        "受付時間案内": ["受付時間は予定案内として明記する", "効果やチャンス消失と結びつけない", "ご無理のない範囲で、という任意性を添える"]
+      };
 
-      let text = "";
-      if (situation) {
-        text = `${opening}\n\n「${situation}」というお悩みに向き合いながら、タロットと星を読みました。\n${body}\n\n${closing}`;
-      } else {
-        text = `${opening}\n\n${body}\n\n${closing}`;
+      const themeHints = {
+        "復縁": "彼の気持ちや未来を断定せず、『動きが出る可能性』『まだ整理されていない思いを感じる』など主観表現にします。",
+        "片思い": "相手の好意を言い切らず、『少しずつ距離を縮める』『反応を見ながら』など段階的な表現にします。",
+        "音信不通": "『嫌われたわけではない』の断定は避け、『距離を置いているように感じる』『状況を整理する』に寄せます。",
+        "不倫": "強い結びつきや運命断定を避け、気持ちの整理・今後の選択肢を一緒に考える表現にします。",
+        "結婚": "結婚時期や結果を保証せず、価値観のすり合わせや関係づくりのヒントにします。",
+        "仕事": "合否・投資・専門判断は避け、気持ちや選択肢整理のサポートに留めます。",
+        "人間関係": "相手を悪者にしすぎず、本人の心の整え方や距離感の見直しに寄せます。",
+        "縁結び": "効果保証や相手を動かす断定を避け、自然な形で心を整える表現にします。",
+        "縁切り": "第三者を不幸にする表現は避け、本人の不要な縁や気持ちの整理として扱います。",
+        "波動修正": "『効果が出る』『必ず変わる』ではなく、心を整える補助・きっかけとして案内します。"
+      };
+
+      const toneHints = {
+        "やさしい": "語尾は『〜ですね』『〜していきましょう』など、やわらかく。",
+        "神秘的": "『星』『光』『流れ』などは使ってOK。ただし効果保証に結びつけない。",
+        "はっきりめ": "結論は伝えてOK。ただし未来や相手の気持ちは断定せず、可能性提示にする。",
+        "寄り添い系": "共感を厚めにしつつ、不安を増幅する言い回しは避ける。",
+        "短文": "一文を短くし、案内は任意表現にする。",
+        "長文": "情緒は残しつつ、断定・不安・無料訴求が重ならないようにする。",
+        "LINE風": "親しみやすくてOK。ただし『今すぐ』『絶対』などは避ける。"
+      };
+
+      const safePhrases = [
+        "必要だと感じたタイミングで、一緒に整理していきましょう。",
+        "今は焦らず、状況をひとつずつ見ていくのが良さそうです。",
+        "彼の気持ちには、まだ整理しきれていない部分があるように感じます。",
+        "ご無理のない範囲で、またお話しにいらしてくださいね。",
+        "可能性を見ながら、今できる一手を一緒に考えていきましょう。"
+      ];
+
+      const structure = purposeHints[purpose] || purposeHints["鑑定後フォロー"];
+      return `【${theme}／${purpose}／${style}】下書きヒント
+
+この画面の内容は完成文ではありません。先生ご自身の下書きを作るための参考です。
+
+■ 構成の目安
+${structure.map((item, i) => `${i + 1}. ${item}`).join("\n")}
+
+■ テーマ別の注意
+${themeHints[theme] || "断定・不安喚起・強要を避け、相談者が自分で選べる表現にします。"}
+
+■ 文体のコツ
+${toneHints[style] || toneHints["やさしい"]}
+
+■ 参考フレーズ
+${safePhrases.map(p => `・${p}`).join("\n")}
+
+■ 補足メモ
+${situation || "必要に応じて、相談者の状況に合わせた一文を先生ご自身の言葉で追加してください。"}`;
+    }
+
+    function polishDraftFromCreate() {
+      const draftEl = document.getElementById('create-draft-text');
+      const draft = draftEl ? draftEl.value.trim() : '';
+      if (!draft) {
+        alert("先生の下書き本文を入力してください。");
+        return;
       }
-      return text;
+      document.getElementById('check-input-text').value = draft;
+      switchTab('check');
+      checkRisk();
     }
 
     // Sentence splitter keeping offsets intact
@@ -2035,7 +2116,7 @@
             localStorage.setItem('stellatext_stat_created', AppState.stats.created.toString());
             updateStatsUI();
 
-            showToast("営業文をローカルで自動作成しました！");
+            showToast("書き方ヒントを表示しました！");
             setTimeout(() => {
               resultPanel.scrollIntoView({ behavior: 'smooth' });
             }, 100);
@@ -2080,7 +2161,7 @@
             localStorage.setItem('stellatext_stat_created', AppState.stats.created.toString());
             updateStatsUI();
 
-            showToast("営業文をAIで自動作成しました！");
+            showToast("書き方ヒントを表示しました！");
             setTimeout(() => {
               resultPanel.scrollIntoView({ behavior: 'smooth' });
             }, 100);
@@ -2365,6 +2446,8 @@ ${text}
         const localResult = analyzeTextOffline(beforeText);
         beforePanel.innerHTML = localResult.highlightedText;
         afterPanel.innerText = localResult.improvedText;
+        const finalEdit = document.getElementById('final-edit-text');
+        if (finalEdit) finalEdit.value = localResult.improvedText;
       } else {
         let highlightedBefore = beforeText;
         if (warnings && warnings.length > 0) {
@@ -2379,13 +2462,16 @@ ${text}
         }
         beforePanel.innerHTML = highlightedBefore;
         afterPanel.innerText = afterText;
+        const finalEdit = document.getElementById('final-edit-text');
+        if (finalEdit) finalEdit.value = afterText || '';
       }
     }
 
     function copyImprovedText() {
-      const text = document.getElementById('panel-after-text').innerText;
+      const finalEdit = document.getElementById('final-edit-text');
+      const text = finalEdit ? finalEdit.value : document.getElementById('panel-after-text').innerText;
       navigator.clipboard.writeText(text).then(() => {
-        showToast("After文（改善案）をコピーしました！");
+        showToast("最終文をコピーしました！");
       });
     }
 
@@ -2419,7 +2505,8 @@ ${text}
     }
 
     function saveTemplateFromCheck() {
-      const text = document.getElementById('panel-after-text').innerText;
+      const finalEdit = document.getElementById('final-edit-text');
+      const text = finalEdit ? finalEdit.value : document.getElementById('panel-after-text').innerText;
       if (!text) return;
 
       document.getElementById('modal-body-text').value = text;
