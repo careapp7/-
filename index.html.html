@@ -1,0 +1,2619 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StellaText - 占い師向け営業文サポート</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    /* Reset & Base Styles */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg-dark: #090714;
+      --bg-card: rgba(20, 16, 43, 0.7);
+      --bg-card-hover: rgba(28, 22, 61, 0.85);
+      --border-color: rgba(139, 92, 246, 0.2);
+      --border-color-focus: rgba(167, 139, 250, 0.5);
+      
+      --purple-light: #d8b4fe;
+      --purple-main: #a78bfa;
+      --purple-dark: #7c3aed;
+      --purple-deep: #4c1d95;
+      
+      --gold-light: #fef08a;
+      --gold-main: #fbbf24;
+      --gold-dark: #d97706;
+      
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --text-dark: #1f2937;
+      
+      --risk-safe: #10b981;
+      --risk-warn: #fbbf24;
+      --risk-danger: #ef4444;
+      
+      --font-body: 'Noto Sans JP', sans-serif;
+      --font-display: 'Outfit', 'Noto Sans JP', sans-serif;
+      
+      --transition-speed: 0.3s;
+    }
+
+    body {
+      font-family: var(--font-body);
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* Cosmic Background Starfield */
+    #starfield {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    /* Outer Container */
+    .app-container {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 16px;
+    }
+
+    /* Header Styling */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 0;
+      border-bottom: 1px solid var(--border-color);
+      margin-bottom: 24px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: var(--text-main);
+    }
+
+    .logo-icon {
+      color: var(--gold-main);
+      filter: drop-shadow(0 0 8px rgba(251, 191, 36, 0.6));
+      animation: pulse 3s infinite ease-in-out;
+    }
+
+    .logo-text h1 {
+      font-family: var(--font-display);
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      background: linear-gradient(135deg, var(--text-main) 30%, var(--purple-light) 70%, var(--gold-light) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .logo-text p {
+      font-size: 11px;
+      color: var(--text-muted);
+      letter-spacing: 0.1em;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 12px;
+    }
+
+    /* Navigation Menu */
+    .nav-bar {
+      display: flex;
+      background: rgba(15, 12, 33, 0.8);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 6px;
+      margin-bottom: 24px;
+      backdrop-filter: blur(12px);
+      gap: 4px;
+      overflow-x: auto;
+      scrollbar-width: none; /* Firefox */
+    }
+
+    .nav-bar::-webkit-scrollbar {
+      display: none; /* Safari & Chrome */
+    }
+
+    .nav-tab {
+      flex: 1;
+      min-width: 100px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 16px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-weight: 500;
+      font-size: 14px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all var(--transition-speed);
+      white-space: nowrap;
+    }
+
+    .nav-tab:hover {
+      color: var(--text-main);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .nav-tab.active {
+      color: var(--bg-dark);
+      background: linear-gradient(135deg, var(--purple-light), var(--gold-light));
+      font-weight: 700;
+      box-shadow: 0 4px 15px rgba(167, 139, 250, 0.3);
+    }
+
+    .nav-tab i {
+      width: 16px;
+      height: 16px;
+    }
+
+    /* Main Area Pages */
+    .page {
+      display: none;
+      animation: fadeIn 0.4s ease-out forwards;
+      margin-bottom: 60px;
+    }
+
+    .page.active {
+      display: block;
+    }
+
+    /* Glassmorphism Panel */
+    .glass-panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 24px;
+      backdrop-filter: blur(16px);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+      margin-bottom: 24px;
+      transition: border-color var(--transition-speed), transform var(--transition-speed);
+    }
+
+    .glass-panel:hover {
+      border-color: rgba(167, 139, 250, 0.3);
+    }
+
+    /* Headings */
+    h2 {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-main);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding-bottom: 10px;
+    }
+
+    h2 i {
+      color: var(--purple-main);
+    }
+
+    h3 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      color: var(--purple-light);
+    }
+
+    /* Forms & Inputs */
+    .form-group {
+      margin-bottom: 20px;
+      transition: opacity 0.3s;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 8px;
+      color: var(--text-main);
+    }
+
+    .form-label span {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-left: 6px;
+    }
+
+    /* Chips Selector */
+    .chip-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .chip-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-color);
+      color: var(--text-muted);
+      padding: 8px 16px;
+      border-radius: 50px;
+      cursor: pointer;
+      font-size: 13px;
+      transition: all var(--transition-speed);
+      font-weight: 500;
+    }
+
+    .chip-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--text-main);
+      border-color: var(--purple-main);
+    }
+
+    .chip-btn.active {
+      background: linear-gradient(135deg, var(--purple-deep), rgba(124, 58, 237, 0.6));
+      color: #fff;
+      border-color: var(--purple-light);
+      box-shadow: 0 0 10px rgba(167, 139, 250, 0.2);
+    }
+
+    /* Dropdowns, Textareas, Inputs */
+    select, textarea, input[type="text"], input[type="password"] {
+      width: 100%;
+      background: rgba(10, 8, 26, 0.8);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 12px 16px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-family: inherit;
+      outline: none;
+      transition: all var(--transition-speed);
+    }
+
+    select:focus, textarea:focus, input[type="text"]:focus, input[type="password"]:focus {
+      border-color: var(--border-color-focus);
+      box-shadow: 0 0 8px rgba(167, 139, 250, 0.3);
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 120px;
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 24px;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 15px;
+      cursor: pointer;
+      transition: all var(--transition-speed);
+      border: none;
+      outline: none;
+      text-decoration: none;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--purple-dark), #6366f1);
+      color: #fff;
+      box-shadow: 0 4px 15px rgba(124, 58, 237, 0.4);
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: linear-gradient(135deg, #8b5cf6, #4f46e5);
+      box-shadow: 0 4px 20px rgba(139, 92, 246, 0.6);
+      transform: translateY(-1px);
+    }
+
+    .btn-gold {
+      background: linear-gradient(135deg, var(--gold-dark), var(--gold-main));
+      color: var(--bg-dark);
+      box-shadow: 0 4px 15px rgba(251, 191, 36, 0.3);
+    }
+
+    .btn-gold:hover:not(:disabled) {
+      background: linear-gradient(135deg, var(--gold-main), var(--gold-light));
+      box-shadow: 0 4px 20px rgba(251, 191, 36, 0.5);
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+      background: rgba(255, 255, 255, 0.15);
+      border-color: var(--purple-main);
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-block {
+      display: flex;
+      width: 100%;
+    }
+
+    .btn-sm {
+      padding: 6px 12px;
+      font-size: 12px;
+      border-radius: 8px;
+    }
+
+    /* Cards Grid */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    @media (max-width: 768px) {
+      .grid-2, .grid-3 {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Home Page Specifics */
+    .hero {
+      text-align: center;
+      padding: 40px 0;
+    }
+
+    .hero h2 {
+      font-size: 28px;
+      border: none;
+      padding: 0;
+      margin-bottom: 12px;
+      justify-content: center;
+      background: linear-gradient(135deg, var(--text-main), var(--gold-light));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero p {
+      color: var(--text-muted);
+      font-size: 16px;
+      max-width: 600px;
+      margin: 0 auto 24px;
+    }
+
+    .stat-card {
+      text-align: center;
+      padding: 24px;
+      border-radius: 16px;
+      background: rgba(15, 12, 33, 0.5);
+      border: 1px solid var(--border-color);
+    }
+
+    .stat-value {
+      font-family: var(--font-display);
+      font-size: 36px;
+      font-weight: 700;
+      color: var(--gold-main);
+      margin-bottom: 6px;
+      text-shadow: 0 0 10px rgba(251, 191, 36, 0.3);
+    }
+
+    .stat-label {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    /* Result Panel & Layouts */
+    .result-box {
+      background: rgba(10, 8, 25, 0.9);
+      border: 1px solid rgba(139, 92, 246, 0.3);
+      border-radius: 14px;
+      padding: 18px;
+      font-size: 15px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      min-height: 120px;
+      color: var(--text-main);
+      margin-bottom: 16px;
+    }
+
+    .action-row {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    /* Loading Spinner */
+    .spinner-container {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 0;
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid rgba(167, 139, 250, 0.1);
+      border-left-color: var(--purple-light);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 16px;
+    }
+
+    .spinner-text {
+      color: var(--purple-light);
+      font-size: 14px;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+    }
+
+    /* Risk analysis display */
+    .risk-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    @media (max-width: 640px) {
+      .risk-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .risk-meter {
+      background: rgba(15, 12, 33, 0.5);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 12px;
+      text-align: center;
+    }
+
+    .risk-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+
+    .risk-stars {
+      display: flex;
+      justify-content: center;
+      gap: 2px;
+      margin-bottom: 6px;
+    }
+
+    .risk-star {
+      color: rgba(255, 255, 255, 0.15);
+      font-size: 14px;
+    }
+
+    .risk-star.filled {
+      color: var(--gold-main);
+      text-shadow: 0 0 5px rgba(251, 191, 36, 0.5);
+    }
+
+    .risk-level-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .level-safe { background: rgba(16, 185, 129, 0.2); color: var(--risk-safe); border: 1px solid rgba(16, 185, 129, 0.3); }
+    .level-warn { background: rgba(251, 191, 36, 0.2); color: var(--risk-warn); border: 1px solid rgba(251, 191, 36, 0.3); }
+    .level-danger { background: rgba(239, 68, 68, 0.2); color: var(--risk-danger); border: 1px solid rgba(239, 68, 68, 0.3); }
+
+    /* Warnings Table Styling */
+    .warnings-table-wrapper {
+      width: 100%;
+      overflow-x: auto;
+      margin-top: 12px;
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+      background: rgba(10, 8, 25, 0.6);
+    }
+
+    .warnings-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 13px;
+    }
+
+    .warnings-table th {
+      background: rgba(124, 58, 237, 0.15);
+      color: var(--purple-light);
+      padding: 12px 16px;
+      font-weight: 600;
+      border-bottom: 1px solid var(--border-color);
+      white-space: nowrap;
+    }
+
+    .warnings-table td {
+      padding: 14px 16px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      vertical-align: middle;
+      line-height: 1.5;
+    }
+
+    .warnings-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .warnings-table tr:hover {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .warnings-table .td-expr {
+      font-weight: 700;
+      color: var(--risk-danger);
+    }
+
+    .warnings-table .td-expr.warn-only {
+      color: var(--risk-warn);
+    }
+
+    .warnings-table .td-expr.safe-only {
+      color: var(--risk-safe);
+    }
+
+    .warnings-table .td-reason {
+      color: var(--text-muted);
+      max-width: 320px;
+    }
+
+    /* Before / After view */
+    .before-after-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    @media (max-width: 768px) {
+      .before-after-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .panel-before {
+      border-left: 4px solid var(--risk-danger);
+    }
+
+    .panel-after {
+      border-left: 4px solid var(--risk-safe);
+    }
+
+    .highlight-red {
+      background: rgba(239, 68, 68, 0.25);
+      border-bottom: 2px dotted var(--risk-danger);
+      cursor: help;
+      padding: 1px 0;
+    }
+
+    .highlight-green {
+      background: rgba(16, 185, 129, 0.2);
+      border-bottom: 2px solid var(--risk-safe);
+      cursor: help;
+      padding: 1px 0;
+    }
+
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: rgba(124, 58, 237, 0.9);
+      border: 1px solid var(--purple-light);
+      color: #fff;
+      padding: 12px 24px;
+      border-radius: 50px;
+      font-size: 14px;
+      font-weight: 600;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(8px);
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      pointer-events: none;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* Templates List */
+    .templates-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .search-input-wrapper {
+      position: relative;
+      flex: 1;
+      max-width: 320px;
+    }
+
+    .search-input-wrapper i {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      width: 16px;
+      height: 16px;
+    }
+
+    .search-input-wrapper input {
+      padding-left: 36px;
+    }
+
+    .template-card {
+      background: rgba(15, 12, 33, 0.5);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 18px;
+      transition: all var(--transition-speed);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 180px;
+    }
+
+    .template-card:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--border-color-focus);
+      transform: translateY(-2px);
+    }
+
+    .template-tag-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+
+    .tag-badge {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      background: rgba(167, 139, 250, 0.15);
+      color: var(--purple-light);
+      border: 1px solid rgba(167, 139, 250, 0.2);
+    }
+
+    .tag-badge.purpose {
+      background: rgba(251, 191, 36, 0.15);
+      color: var(--gold-main);
+      border-color: rgba(251, 191, 36, 0.2);
+    }
+
+    .template-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-main);
+      margin-bottom: 8px;
+      line-height: 1.4;
+    }
+
+    .template-body {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.5;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      margin-bottom: 16px;
+      white-space: pre-wrap;
+    }
+
+    .template-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      padding-top: 12px;
+      margin-top: auto;
+    }
+
+    .template-date {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .template-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .action-icon-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 6px;
+      transition: all var(--transition-speed);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .action-icon-btn:hover {
+      color: var(--text-main);
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .action-icon-btn.delete:hover {
+      color: var(--risk-danger);
+      background: rgba(239, 68, 68, 0.1);
+    }
+
+    /* Modal Styles */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(5, 3, 15, 0.85);
+      backdrop-filter: blur(8px);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal-box {
+      background: var(--bg-dark);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      width: 100%;
+      max-width: 500px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+      overflow: hidden;
+      animation: modalSlide 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .modal-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-header h3 {
+      margin-bottom: 0;
+      color: var(--text-main);
+    }
+
+    .modal-body {
+      padding: 20px;
+    }
+
+    .modal-footer {
+      padding: 16px 20px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+    }
+
+    /* Animations */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); filter: drop-shadow(0 0 8px rgba(251, 191, 36, 0.5)); }
+      50% { transform: scale(1.08); filter: drop-shadow(0 0 15px rgba(251, 191, 36, 0.8)); }
+    }
+
+    @keyframes modalSlide {
+      from { opacity: 0; transform: scale(0.9) translateY(20px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Starfield Canvas -->
+  <canvas id="starfield"></canvas>
+
+  <div class="app-container">
+    
+    <!-- Header -->
+    <header>
+      <a href="#" class="logo" onclick="switchTab('home')">
+        <i data-lucide="sparkles" class="logo-icon"></i>
+        <div class="logo-text">
+          <h1>StellaText</h1>
+          <p>FOR FORTUNE TELLERS</p>
+        </div>
+      </a>
+      
+      <div class="header-actions">
+        <button class="btn btn-secondary btn-sm" onclick="switchTab('settings')">
+          <i data-lucide="settings"></i> 設定
+        </button>
+      </div>
+    </header>
+
+    <!-- Navigation Bar -->
+    <nav class="nav-bar">
+      <button class="nav-tab active" onclick="switchTab('home')" id="tab-home">
+        <i data-lucide="home"></i> ホーム
+      </button>
+      <button class="nav-tab" onclick="switchTab('create')" id="tab-create">
+        <i data-lucide="pen-tool"></i> 文面作成
+      </button>
+      <button class="nav-tab" onclick="switchTab('check')" id="tab-check">
+        <i data-lucide="shield-alert"></i> 送信前チェック
+      </button>
+      <button class="nav-tab" onclick="switchTab('templates')" id="tab-templates">
+        <i data-lucide="folder-heart"></i> テンプレ保存
+      </button>
+    </nav>
+
+    <!-- ==================== HOME PAGE ==================== -->
+    <div class="page active" id="page-home">
+      <div class="hero">
+        <h2>占い師のための営業・鑑定サポート文作成ツール</h2>
+        <p>JavaScriptによる高速なローカル判定エンジンを搭載。外部へのデータ送信なしで、安全に営業・フォローメッセージの作成や法的リスクチェックを行えます。</p>
+        <button class="btn btn-primary" onclick="switchTab('create')">
+          営業・フォロー文を作成する <i data-lucide="arrow-right"></i>
+        </button>
+      </div>
+
+      <div class="grid-3" style="margin-top: 20px;">
+        <div class="stat-card">
+          <div class="stat-value" id="stat-count-templates">0</div>
+          <div class="stat-label">保存されたテンプレート</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="stat-count-created">0</div>
+          <div class="stat-label">累計文面作成数</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="stat-count-checked">0</div>
+          <div class="stat-label">送信前チェック実行数</div>
+        </div>
+      </div>
+
+      <div class="glass-panel" style="margin-top: 40px;">
+        <h2><i data-lucide="info"></i> 6つのリスクチェック観点について</h2>
+        <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.6;">
+          本アプリは、占いプラットフォームの運用指針や各種法令（景品表示法・消費者契約法など）を考慮し、占い師が送信する文章内の以下のリスクをチェックします。
+        </p>
+        <div class="grid-2">
+          <div style="background: rgba(255,255,255,0.02); padding: 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+            <h3 style="color: var(--gold-main); font-size: 14px; margin-bottom: 6px;">1. 不安喚起</h3>
+            <p style="font-size: 12px; color: var(--text-muted); line-height: 1.5;">「このままだと一生孤独になります」など、根拠のない不幸や災いを誇張して不安を煽る表現。</p>
+          </div>
+          <div style="background: rgba(255,255,255,0.02); padding: 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+            <h3 style="color: var(--gold-main); font-size: 14px; margin-bottom: 6px;">2. 断定的判断</h3>
+            <p style="font-size: 12px; color: var(--text-muted); line-height: 1.5;">「絶対に付き合えます」「確実に復縁します」など、不確実な未来の出来事を断定する表現。</p>
+          </div>
+          <div style="background: rgba(255,255,255,0.02); padding: 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+            <h3 style="color: var(--gold-main); font-size: 14px; margin-bottom: 6px;">3. 鑑定の強要</h3>
+            <p style="font-size: 12px; color: var(--text-muted); line-height: 1.5;">「今すぐ鑑定を受けてください」「返信しないと呪われます」など、顧客の意思を無視して鑑定を迫る表現。</p>
+          </div>
+          <div style="background: rgba(255,255,255,0.02); padding: 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+            <h3 style="color: var(--gold-main); font-size: 14px; margin-bottom: 6px;">4. 施術の反復誘導</h3>
+            <p style="font-size: 12px; color: var(--text-muted); line-height: 1.5;">「効果を出すために、毎日この祈祷を受けてください」など、無制限に施術を繰り返させようとする表現。</p>
+          </div>
+          <div style="background: rgba(255,255,255,0.02); padding: 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+            <h3 style="color: var(--gold-main); font-size: 14px; margin-bottom: 6px;">5. 無断施術・無断鑑定</h3>
+            <p style="font-size: 12px; color: var(--text-muted); line-height: 1.5;">「頼まれていませんが、あなたの霊視をしておきました」など、承諾を得ていない鑑定行為の報告表現。</p>
+          </div>
+          <div style="background: rgba(255,255,255,0.02); padding: 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+            <h3 style="color: var(--gold-main); font-size: 14px; margin-bottom: 6px;">6. 有利誤認</h3>
+            <p style="font-size: 12px; color: var(--text-muted); line-height: 1.5;">「無料鑑定」「無料施術」「通常3万円のところ無料」など、無料訴求・二重価格・過度な優位性で顧客に誤認させる表現。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== CREATE PAGE ==================== -->
+    <div class="page" id="page-create">
+      <div class="glass-panel">
+        <h2><i data-lucide="pen-tool"></i> 営業・フォロー文面作成</h2>
+        
+        <!-- Theme Selection -->
+        <div class="form-group">
+          <label class="form-label">相談テーマ<span>(複数選択不可)</span></label>
+          <div class="chip-container" id="create-theme-chips">
+            <button class="chip-btn active" data-value="復縁">復縁</button>
+            <button class="chip-btn" data-value="片思い">片思い</button>
+            <button class="chip-btn" data-value="音信不通">音信不通</button>
+            <button class="chip-btn" data-value="不倫">不倫</button>
+            <button class="chip-btn" data-value="結婚">結婚</button>
+            <button class="chip-btn" data-value="仕事">仕事</button>
+            <button class="chip-btn" data-value="人間関係">人間関係</button>
+            <button class="chip-btn" data-value="縁結び">縁結び</button>
+            <button class="chip-btn" data-value="縁切り">縁切り</button>
+            <button class="chip-btn" data-value="波動修正">波動修正</button>
+          </div>
+        </div>
+
+        <!-- Sending Purpose -->
+        <div class="form-group">
+          <label class="form-label" for="create-purpose">送信目的</label>
+          <select id="create-purpose">
+            <option value="初回営業">初回営業 (初めましてのご挨拶・初回のアプローチ)</option>
+            <option value="鑑定後フォロー" selected>鑑定後フォロー (鑑定を受けてくれた方へのお礼とアフターケア)</option>
+            <option value="再鑑定案内">再鑑定案内 (しばらく空いてしまったリピーター様へのアプローチ)</option>
+            <option value="施術案内">施術案内 (特別な祈祷やヒーリングなどの案内)</option>
+            <option value="待機開始案内">待機開始案内 (チャット待機を開始した旨の通知)</option>
+            <option value="受付時間案内">受付時間案内 (事前予約や対応可能時間のお知らせ)</option>
+          </select>
+        </div>
+
+        <!-- Tone Style -->
+        <div class="form-group">
+          <label class="form-label">文体・トーン<span>(複数選択不可)</span></label>
+          <div class="chip-container" id="create-style-chips">
+            <button class="chip-btn active" data-value="やさしい">やさしい</button>
+            <button class="chip-btn" data-value="神秘的">神秘的</button>
+            <button class="chip-btn" data-value="はっきりめ">はっきりめ</button>
+            <button class="chip-btn" data-value="寄り添い系">寄り添い系</button>
+            <button class="chip-btn" data-value="短文">短文</button>
+            <button class="chip-btn" data-value="長文">長文</button>
+            <button class="chip-btn" data-value="LINE風">LINE風</button>
+          </div>
+        </div>
+
+        <!-- Details / Situation -->
+        <div class="form-group">
+          <label class="form-label" for="create-situation">相談者の状況・顧客との具体的な関係・盛り込みたい状況 <span>(任意ですが、詳しく入力すると精度が上がります)</span></label>
+          <textarea id="create-situation" placeholder="例：彼から1ヶ月LINEが未読無視されている状態で悩んでいる。彼の本音や今後の展開を視る鑑定を提案し、寄り添う内容にしたい。"></textarea>
+        </div>
+
+        <button class="btn btn-primary btn-block" id="btn-generate-text" onclick="generateText()">
+          <i data-lucide="sparkles"></i> 営業文を自動生成する
+        </button>
+      </div>
+
+      <!-- Loading Indicator -->
+      <div class="spinner-container" id="create-loading">
+        <div class="spinner"></div>
+        <div class="spinner-text">鑑定結果を元に、最良のメッセージを紡いでいます...</div>
+      </div>
+
+      <!-- Generation Result Panel -->
+      <div class="glass-panel" id="create-result-panel" style="display: none;">
+        <h2><i data-lucide="file-text"></i> 生成された文面</h2>
+        <div class="result-box" id="generated-text-content"></div>
+        <div class="action-row">
+          <button class="btn btn-secondary" onclick="copyGeneratedText()">
+            <i data-lucide="copy"></i> コピーする
+          </button>
+          <button class="btn btn-gold" id="btn-create-to-check" onclick="sendToCheckAndAnalyze()">
+            <i data-lucide="shield-alert"></i> このまま送信前チェックにかける
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== CHECK & IMPROVE PAGE ==================== -->
+    <div class="page" id="page-check">
+      <div class="glass-panel">
+        <h2><i data-lucide="shield-alert"></i> 送信前リスクチェック・改善案作成</h2>
+        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">
+          送信前の文章を入力してください。法的なリスク（景表法、不安煽り等）をルールベースで判定し、先生のキャラクターや文体、余韻をそのまま活かした「安全な改善案」を作成します。
+        </p>
+        <div class="form-group">
+          <textarea id="check-input-text" placeholder="ここにチェックしたい文面を貼り付けてください。"></textarea>
+        </div>
+        <div class="action-row" style="justify-content: space-between; align-items: center; width: 100%;">
+          <button class="btn btn-secondary btn-sm" onclick="clearCheckInput()">
+            クリア
+          </button>
+          <button class="btn btn-primary" id="btn-check-risk" onclick="checkRisk()">
+            リスク診断 ＆ 改善案を作成する <i data-lucide="shield-check"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Loading Indicator -->
+      <div class="spinner-container" id="check-loading">
+        <div class="spinner"></div>
+        <div class="spinner-text">文章の安全性および改善ポイントを分析中...</div>
+      </div>
+
+      <!-- Check Results Area -->
+      <div id="check-results-area" style="display: none;">
+        
+        <!-- Risk Level Radar/Meter -->
+        <div class="glass-panel">
+          <h2><i data-lucide="trending-up"></i> リスク評価分析 (6つの観点)</h2>
+          <div class="risk-grid" id="risk-meters-container">
+            <!-- Dynamically populated by JS -->
+          </div>
+        </div>
+
+        <!-- Extract Warnings / Bad Expressions (Table) -->
+        <div class="glass-panel" id="warnings-panel" style="display: none;">
+          <h2><i data-lucide="alert-triangle" style="color: var(--risk-danger);"></i> 検出された懸念表現</h2>
+          <div id="warnings-list-container">
+            <!-- Table dynamically populated by JS -->
+          </div>
+        </div>
+
+        <!-- Before / After Optimization -->
+        <div class="glass-panel">
+          <h2><i data-lucide="git-compare"></i> 改善案作成 (After文)</h2>
+          <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">
+            <i data-lucide="check-circle" style="color: var(--risk-safe); display:inline-block; vertical-align: middle; width:14px; height:14px;"></i> 先生らしさ（文体、感情描写、余韻の「…かもしれなくて。」など）を活かしたまま、問題箇所のみ最小限に書き換えを行いました。
+          </div>
+          
+          <div class="before-after-layout">
+            <div>
+              <h3 style="color: var(--risk-danger);">Before (原文ハイライト)</h3>
+              <div class="result-box panel-before" id="panel-before-text"></div>
+            </div>
+            <div>
+              <h3 style="color: var(--risk-safe);">After (改善案)</h3>
+              <div class="result-box panel-after" id="panel-after-text"></div>
+              <div class="action-row">
+                <button class="btn btn-secondary btn-sm" onclick="saveTemplateFromCheck()">
+                  <i data-lucide="folder-plus"></i> テンプレとして保存
+                </button>
+                <button class="btn btn-gold btn-sm" onclick="copyImprovedText()">
+                  <i data-lucide="copy"></i> After文をコピーする
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== TEMPLATES PAGE ==================== -->
+    <div class="page" id="page-templates">
+      <div class="glass-panel">
+        <div class="templates-header">
+          <h2><i data-lucide="folder-heart"></i> テンプレート保存一覧</h2>
+          <div class="search-input-wrapper">
+            <i data-lucide="search"></i>
+            <input type="text" id="templates-search-input" placeholder="テーマ、目的、文言で検索..." oninput="renderTemplates()">
+          </div>
+        </div>
+
+        <div class="grid-3" id="templates-grid-container">
+          <!-- Dynamically populated by JS -->
+        </div>
+
+        <!-- Empty state -->
+        <div id="templates-empty-state" style="display: none; text-align: center; padding: 40px 0; color: var(--text-muted);">
+          <i data-lucide="folder-open" style="width: 48px; height: 48px; margin-bottom: 12px; opacity: 0.5;"></i>
+          <p>保存されたテンプレートがありません。</p>
+          <p style="font-size: 12px; margin-top: 4px;">文面作成やリスクチェックから保存できます。</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== SETTINGS PAGE ==================== -->
+    <div class="page" id="page-settings">
+      <div class="glass-panel">
+        <h2><i data-lucide="settings"></i> アプリ環境設定</h2>
+        
+        <!-- Engine Selector -->
+        <div class="form-group">
+          <label class="form-label" for="settings-engine">判定・生成エンジンの選択</label>
+          <select id="settings-engine" onchange="toggleEngineFields()">
+            <option value="local" selected>ローカルルール判定 (キー不要・高速・安全)</option>
+            <option value="gemini">Gemini AI判定 (Gemini APIキーが必要)</option>
+          </select>
+        </div>
+
+        <!-- Gemini API Key (Optional wrapper) -->
+        <div class="form-group" id="settings-gemini-key-wrapper" style="opacity: 0.5; pointer-events: none;">
+          <label class="form-label" for="settings-gemini-key">
+            Gemini API キー <span>(AI判定モードでのみ動作に必要です)</span>
+          </label>
+          <input type="password" id="settings-gemini-key" placeholder="ローカルエンジンのためキーは不要です">
+          <p style="font-size: 11px; color: var(--text-muted); margin-top: 6px;">
+            ※ APIキーはブラウザの localStorage に直接保存され、Google以外の外部サーバーには送信されません。<br>
+            ※ キーは <a href="https://aistudio.google.com/" target="_blank" style="color: var(--purple-light);">Google AI Studio</a> から無料で取得できます。
+          </p>
+        </div>
+
+        <!-- Supabase Optional -->
+        <div class="form-group" style="border-top: 1px solid rgba(255,255,255,0.05); padding-top: 20px; margin-top: 20px;">
+          <label class="form-label">
+            Supabase 同期設定 (オプション)
+            <span>(未設定の場合はローカル保存のみで動作します)</span>
+          </label>
+          <div style="margin-bottom: 12px;">
+            <label class="form-label" for="settings-supabase-url" style="font-size: 12px;">Supabase URL</label>
+            <input type="text" id="settings-supabase-url" placeholder="https://xxxx.supabase.co">
+          </div>
+          <div>
+            <label class="form-label" for="settings-supabase-key" style="font-size: 12px;">Supabase Anon Key</label>
+            <input type="password" id="settings-supabase-key" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...">
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="action-row" style="margin-top: 24px;">
+          <button class="btn btn-secondary" onclick="clearAllData()">
+            <i data-lucide="trash-2"></i> 全データを消去
+          </button>
+          <button class="btn btn-gold" onclick="saveSettings()">
+            <i data-lucide="save"></i> 設定を保存する
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Toast Notification element -->
+  <div class="toast" id="toast-notify">
+    <i data-lucide="check"></i> <span id="toast-text">コピーしました</span>
+  </div>
+
+  <!-- Save Template Dialog Modal -->
+  <div class="modal-overlay" id="save-template-modal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>テンプレートの保存</h3>
+        <button class="action-icon-btn" onclick="closeSaveModal()"><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label" for="modal-title">タイトル・名称</label>
+          <input type="text" id="modal-title" placeholder="例：音信不通の彼向けお礼メール">
+        </div>
+        <div class="form-group">
+          <label class="form-label">テーマ</label>
+          <div class="chip-container" id="modal-theme-chips">
+            <!-- Set dynamically -->
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">送信目的</label>
+          <div class="chip-container" id="modal-purpose-chips">
+            <!-- Set dynamically -->
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">本文 (After文)</label>
+          <textarea id="modal-body-text" readonly style="background: rgba(0,0,0,0.2); opacity: 0.8; height: 100px; font-size:12px;"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-sm" onclick="closeSaveModal()">キャンセル</button>
+        <button class="btn btn-gold btn-sm" onclick="confirmSaveTemplate()">保存する</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Javascript Logic -->
+  <script>
+    // State Management
+    const AppState = {
+      activeTab: 'home',
+      engine: localStorage.getItem('stellatext_engine') || 'local',
+      geminiKey: localStorage.getItem('stellatext_gemini_key') || '',
+      supabaseUrl: localStorage.getItem('stellatext_sb_url') || '',
+      supabaseKey: localStorage.getItem('stellatext_sb_key') || '',
+      templates: [],
+      stats: {
+        created: parseInt(localStorage.getItem('stellatext_stat_created') || '0', 10),
+        checked: parseInt(localStorage.getItem('stellatext_stat_checked') || '0', 10),
+      },
+      currentCheckResult: null,
+      lastWarnings: []
+    };
+
+    // Constant parameters
+    const ConsultThemes = ["復縁", "片思い", "音信不通", "不倫", "結婚", "仕事", "人間関係", "縁結び", "縁切り", "波動修正"];
+    const SendPurposes = ["初回営業", "鑑定後フォロー", "再鑑定案内", "施術案内", "待機開始案内", "受付時間案内"];
+
+    // Local Text Generation Templates Matrix
+    const GenerationTemplates = {
+      openings: {
+        "初回営業": {
+          "やさしい": "はじめまして、占い師の〇〇です。あなたのことがふと気になり、お声をかけさせていただきました。",
+          "神秘的": "星の運行が、あなたとの出会いを示していました。夜空を見上げた時、何かを感じませんでしたか？",
+          "はっきりめ": "はじめまして、占い師の〇〇です。あなたの状況について、重要なメッセージが降りてきたのでご連絡しました。",
+          "寄り添い系": "はじめまして。今、とても心が苦しかったり、誰にも言えない思いを抱えていませんか？お辛い気持ち、私が受け止めますね。",
+          "短文": "はじめまして、占い師の〇〇です。少しでもお力になれればと思いご連絡しました。",
+          "長文": "はじめまして、占い師の〇〇です。数ある占い師の中から、こうしてご縁をいただけたことに深く感謝いたします。あなたが今、心の中に抱えている小さなお悩みや、誰にも言えない重い気持ちをそっと私にお話ししてみませんか？",
+          "LINE風": "はじめまして！占い師の〇〇です😊ふと気になったのでご連絡しちゃいました。"
+        },
+        "鑑定後フォロー": {
+          "やさしい": "先ほどは鑑定を受けてくださりありがとうございました。お話しできてとても嬉しかったです。",
+          "神秘的": "先ほどは魂の対話をありがとうございました。あなたを包むオーラが今、変化を始めようとしています。",
+          "はっきりめ": "先ほどは鑑定をありがとうございました。お伝えしたカードの示す意味について、改めて整理してお送りします。",
+          "寄り添い系": "先ほどは鑑定をありがとうございました。たくさん涙を流されて、少しは心が軽くなりましたか？",
+          "短文": "先ほどは鑑定ありがとうございました。お話しできて光栄でした。",
+          "長文": "先ほどは貴重なお時間をいただき、鑑定を受けてくださり本当にありがとうございました。たくさんのお話を伺う中で、あなたの真剣な思いと真っ直ぐな姿勢が痛いほど伝わってまいりました。",
+          "LINE風": "さっきは鑑定ありがとう✨お話しできて嬉しかったです！"
+        },
+        "再鑑定案内": {
+          "やさしい": "こんにちは、占い師の〇〇です。お元気にされていますか？その後、状況はいかがでしょうか。",
+          "神秘的": "月が満ちるたび、あなたの面影が私の水晶に浮かび上がります。心穏やかにお過ごしですか？",
+          "はっきりめ": "お世話になっております、〇〇です。前回の鑑定からしばらく経ちましたが、お相手の様子に変化はありましたか？",
+          "寄り添い系": "〇〇さん、お元気ですか？最近少し無理を溜め込んでいないか心配でご連絡しました。",
+          "短文": "お元気にされていますか？〇〇です。その後の様子が気になりご連絡しました。",
+          "長文": "こんにちは、占い師の〇〇です。前回の鑑定から少しお時間が経ちましたが、お変わりなくお過ごしでしょうか。時折、あなたの幸せを祈りながらカードをめくっています。心の中にまたモヤモヤが溜まってきていませんか？",
+          "LINE風": "〇〇さんお久しぶり！元気にしてる？その後の調子はどうかな？と思って連絡したよ😊"
+        },
+        "施術案内": {
+          "やさしい": "あなたのために、特別な祈祷をさせていただけることになりました。少しでも心が安らぎますように。",
+          "神秘的": "今夜、天の川 of 光が集まる刻、あなたの願いを天へ届ける特別波動修正を行います。",
+          "はっきりめ": "状況を根本から好転させるため、今夜特別な施術（縁結び・波動修正）をご案内します。",
+          "寄り添い系": "あなたがこれ以上悲しい思いをしないように、私の持てる力を尽くしてヒーリングをお届けしますね。",
+          "短文": "必要であれば、今の状態に合わせた波動修正のご案内もできます。",
+          "長文": "あなたが今抱えている困難な状況を打破し、運気の流れを根本から変えるための特別な施術をご用意いたしました。心身を浄化し、お相手の心を引き寄せる力を送ります。",
+          "LINE風": "今夜、必要であれば〇〇さんの状態に合わせて波動を整えていくね✨"
+        },
+        "待機開始案内": {
+          "やさしい": "ただいま待機を開始いたしました。もしよろしければ、お気軽にお話しにいらしてくださいね。",
+          "神秘的": "星のゲートが開きました。ただいま鑑定待機中となります。心光り輝くメッセージをお届けします。",
+          "はっきりめ": "待機を開始しました。状況に動きがあった方、今後の指針が知りたい方はどうぞご相談ください。",
+          "寄り添い系": "待機を始めました。今すぐ誰かに話を聞いてほしいとき、寂しさに押しつぶされそうなときはいつでもいらしてくださいね。",
+          "短文": "ただいま待機中です。ご相談お待ちしております。",
+          "長文": "ただいまチャット鑑定の待機を開始いたしました。あなたの心の重荷を少しでも軽くできるよう、全力で寄り添い、カードを展開いたします。どのような小さなお悩みでも遠慮なくお話しくださいね。",
+          "LINE風": "今からチャット待機するよ〜！話したいことがあればいつでもチャットしてね🙌"
+        },
+        "受付時間案内": {
+          "やさしい": "明日〇時から〇時まで、鑑定の受付を行っております。ご予約をお待ちしておりますね。",
+          "神秘的": "明日の陽が沈む刻（〇時〜〇時）、星の導きを解き明かす時間を設けます。",
+          "はっきりめ": "次回の鑑定予約枠を【〇時〜〇時】に設定しました。ご希望の方はお早めにご予約ください。",
+          "寄り添い系": "明日の〇時〜〇時に鑑定枠を開けますね。お仕事帰りの疲れた心にそっと寄り添います。",
+          "短文": "次回の受付時間は【〇時〜〇時】です。ご予約お待ちしております。",
+          "長文": "次回の鑑定受付および事前予約のスケジュールが決まりましたのでご案内いたします。【〇時〜〇時】までの間、あなたのご相談をじっくりと承ります。前もってご予約をいただくことでスムーズにご案内できます。",
+          "LINE風": "明日の【〇時〜〇時】にチャットにいるよ！予約もできるから連絡してね😊"
+        }
+      },
+      bodies: {
+        "復縁": "お相手の方は今、心の奥であなたとの思い出を振り返っているようです。直接連絡するのはためらいがあるようですが、あなたへの未練は…かもしれなくて。今すぐ焦って動くより、心の結びつきをじっくり育てることで、再び道が交わる可能性も感じられますよ。",
+        "片思い": "お相手はあなたの存在を好意的に見ていますが、まだ自分の本心を見せるのには照れや迷いがあるようです。少しずつ距離を縮めていくことで、少しずつお互いの心が近づいていく可能性もあります。お二人のご縁の結びつきはとても深く、良い方向へ向かう兆しも感じられますよ。",
+        "音信不通": "彼から連絡がないと不安で胸が締め付けられますよね。でも、彼はあなたを嫌いになったとは言い切れず、今は一時的に自分の殻に閉じこもっている状態のようです。波動修正を施し、彼の潜在意識へ届くようそっと語りかけてみましょう。時間の流れとともに、状況に動きが出てくる可能性もあります。",
+        "不倫": "誰にも言えない秘密の関係だからこそ、一人で悩むのはお辛いですよね。お二人のつながりには、まだ簡単には整理しきれない気配も感じられます。ただ、焦って無理な決断を迫るのではなく、今は彼の心の動きを慎重に見守ることも、一つの道のように感じます。",
+        "結婚": "お二人の未来の星回りを見ると、温かい家庭を築くためのしっかりとした運気のベースが整いつつあるように感じます。お相手も将来について考えてはいますが、具体的なアクションを起こすきっかけを待っているようです。お互いの価値観を優しくすり合わせていきましょう。",
+        "仕事": "あなたの才能や努力は、周囲に少しずつ伝わっているように感じますよ。今は運気の転換期に来ており、少し迷いが生じるかもしれませんが、自分の選択に自信を持って進んでみても良いかもしれません。",
+        "人間関係": "周囲との調和を大切にされるあなただからこそ、人間関係での気疲れが溜まっていますね。相手のエネルギーに引っ張られすぎないよう、まずはご自身を第一に満たしてあげましょう。",
+        "縁結び": "お二人のご縁の流れを丁寧に見つめるため、今の状態に合う整え方を見ていきます。彼の中にある印象や流れを、優しく見守る形で整えていくご案内もできます。自然な形で心が通い合えるようにお手伝いしますね。",
+        "縁切り": "あなたを苦しめる悪縁やマイナスのエネルギーをそっと遠ざけ、新しい良縁を呼び込むためのスペースを作ります。誰かを呪うようなことではなく、あなたの人生をより幸せなものにするための整理整頓です。",
+        "波動修正": "心や体に乱れが生じると、目の前の現実も曇って見えてしまいます。今夜はゆっくりと深呼吸をして、あなたの放つオーラを本来の美しく穏やかな輝きに整えるお手伝いをさせてくださいね。"
+      },
+      closings: {
+        "やさしい": "寒さも厳しくなりますので、どうぞご無理なさらないでくださいね。あなたの幸せをいつも祈っています。",
+        "神秘的": "満天の星々が、今夜もあなたの行く先を優しく照らし出しますように。またいつでもお話しください。",
+        "はっきりめ": "現状を整理するヒントをカードから読み解いていきます。迷ったときはいつでもチャットへお越しください。お待ちしております。",
+        "寄り添い系": "どうか、一人で抱え込まず、私に頼ってくださいね。あなたの味方はここにいます。いつでも待っていますよ。",
+        "短文": "それでは、またお話ししましょう。応援しています。",
+        "長文": "これからあなたが歩む未来が、愛と光に満ちた素晴らしいものになりますように、これからも丁寧に寄り添っていきます。どのような些細なことでも、不安を感じたときはいつでも私に会いに来てくださいね。心よりお待ちしております。",
+        "LINE風": "焦らずゆっくりいこうね！またいつでもLINE感覚で話しかけてね〜！応援してるよ✨"
+      }
+    };
+
+    // Default Templates to seed when empty
+    const DefaultTemplates = [
+      {
+        id: 'tpl_1',
+        title: '復縁悩み・鑑定後フォロー',
+        theme: '復縁',
+        purpose: '鑑定後フォロー',
+        body: '〇〇さん、先ほどは鑑定を受けてくださりありがとうございました。\nあなたの真っ直ぐな思いが届きますように祈っております。\n\n彼は今、少し自分の時間を大切にしたい時期のようですね。決して嫌われたわけではないので、どうか一人で抱え込まず、私に頼ってくださいね。いつでもここで待っていますよ。',
+        created_at: new Date().toISOString()
+      },
+      {
+        id: 'tpl_2',
+        title: '音信不通の彼への施術案内',
+        theme: '音信不通',
+        purpose: '施術案内',
+        body: '〇〇さん、お元気ですか？なかなか彼と連絡がつかなくて、切ない日々を過ごされていますよね。\n彼の潜在意識に優しく語りかけ、心の結びつきを取り戻す「波動修正」を今夜、特別に行わせていただきます。\n心が少しでも軽くなるように、そっとサポートさせていただきますね。',
+        created_at: new Date().toISOString()
+      }
+    ];
+
+    // Initialize Application
+    window.addEventListener('DOMContentLoaded', () => {
+      lucide.createIcons();
+      initStarfield();
+
+      // Load Configs
+      document.getElementById('settings-engine').value = AppState.engine;
+      document.getElementById('settings-gemini-key').value = AppState.geminiKey;
+      document.getElementById('settings-supabase-url').value = AppState.supabaseUrl;
+      document.getElementById('settings-supabase-key').value = AppState.supabaseKey;
+
+      toggleEngineFields();
+      loadTemplates();
+
+      setupChipHandlers('create-theme-chips');
+      setupChipHandlers('create-style-chips');
+      updateStatsUI();
+
+      if (AppState.engine === 'gemini' && !AppState.geminiKey) {
+        showToast("Geminiエンジンに設定されていますが、APIキーが未登録です。");
+      }
+    });
+
+    // -------------------------------------------------------------
+    // Starfield Background Animation
+    // -------------------------------------------------------------
+    function initStarfield() {
+      const canvas = document.getElementById('starfield');
+      const ctx = canvas.getContext('2d');
+      let stars = [];
+      
+      function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
+      
+      window.addEventListener('resize', resize);
+      resize();
+
+      const count = 75;
+      for (let i = 0; i < count; i++) {
+        stars.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          radius: Math.random() * 1.5 + 0.2,
+          alpha: Math.random() * 0.8 + 0.2,
+          speed: Math.random() * 0.05 + 0.01
+        });
+      }
+
+      function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        stars.forEach(star => {
+          ctx.beginPath();
+          ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(255, 255, 255, ${star.alpha})`;
+          ctx.fill();
+
+          star.y += star.speed;
+          if (star.y > canvas.height) {
+            star.y = 0;
+            star.x = Math.random() * canvas.width;
+          }
+
+          star.alpha += (Math.random() - 0.5) * 0.05;
+          if (star.alpha < 0.1) star.alpha = 0.1;
+          if (star.alpha > 0.9) star.alpha = 0.9;
+        });
+
+        requestAnimationFrame(animate);
+      }
+
+      animate();
+    }
+
+    // -------------------------------------------------------------
+    // Tab & Toggle Handlers
+    // -------------------------------------------------------------
+    function switchTab(tabId) {
+      AppState.activeTab = tabId;
+
+      document.querySelectorAll('.nav-tab').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      const activeTabEl = document.getElementById(`tab-${tabId}`);
+      if (activeTabEl) activeTabEl.classList.add('active');
+
+      document.querySelectorAll('.page').forEach(page => {
+        page.classList.remove('active');
+      });
+      const targetPageEl = document.getElementById(`page-${tabId}`);
+      if (targetPageEl) {
+        targetPageEl.classList.add('active');
+      }
+
+      if (tabId === 'templates') {
+        renderTemplates();
+      } else if (tabId === 'home') {
+        updateStatsUI();
+      }
+    }
+
+    function setupChipHandlers(containerId) {
+      const container = document.getElementById(containerId);
+      container.addEventListener('click', (e) => {
+        if (e.target.classList.contains('chip-btn')) {
+          container.querySelectorAll('.chip-btn').forEach(btn => {
+            btn.classList.remove('active');
+          });
+          e.target.classList.add('active');
+        }
+      });
+    }
+
+    function getActiveChipValue(containerId) {
+      const activeChip = document.querySelector(`#${containerId} .chip-btn.active`);
+      return activeChip ? activeChip.dataset.value : '';
+    }
+
+    function toggleEngineFields() {
+      const engine = document.getElementById('settings-engine').value;
+      const wrapper = document.getElementById('settings-gemini-key-wrapper');
+      const keyInput = document.getElementById('settings-gemini-key');
+
+      if (engine === 'local') {
+        wrapper.style.opacity = '0.4';
+        wrapper.style.pointerEvents = 'none';
+        keyInput.placeholder = "ローカルエンジンのためキーは不要です";
+      } else {
+        wrapper.style.opacity = '1';
+        wrapper.style.pointerEvents = 'auto';
+        keyInput.placeholder = "AIZA... で始まるキーを入力してください";
+      }
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById('toast-notify');
+      document.getElementById('toast-text').innerText = message;
+      toast.classList.add('show');
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3500);
+    }
+
+    // -------------------------------------------------------------
+    // offline text generation engine
+    // -------------------------------------------------------------
+    function clientSideGenerateText(theme, purpose, style, situation) {
+      const opening = GenerationTemplates.openings[purpose]?.[style] || GenerationTemplates.openings[purpose]?.["やさしい"];
+      const body = GenerationTemplates.bodies[theme] || "";
+      const closing = GenerationTemplates.closings[style] || GenerationTemplates.closings["やさしい"];
+
+      let text = "";
+      if (situation) {
+        text = `${opening}\n\n「${situation}」というお悩みに向き合いながら、タロットと星を読みました。\n${body}\n\n${closing}`;
+      } else {
+        text = `${opening}\n\n${body}\n\n${closing}`;
+      }
+      return text;
+    }
+
+    // Sentence splitter keeping offsets intact
+    function splitIntoSentences(text) {
+      const sentences = [];
+      let currentSentence = "";
+      let startIdx = 0;
+
+      for (let i = 0; i < text.length; i++) {
+        const char = text[i];
+        currentSentence += char;
+        if (char === '。' || char === '！' || char === '!' || char === '?' || char === '？' || char === '\n') {
+          sentences.push({
+            text: currentSentence,
+            start: startIdx,
+            end: i + 1
+          });
+          currentSentence = "";
+          startIdx = i + 1;
+        }
+      }
+
+      if (currentSentence.length > 0) {
+        sentences.push({
+          text: currentSentence,
+          start: startIdx,
+          end: text.length
+        });
+      }
+
+      return sentences;
+    }
+
+    // -------------------------------------------------------------
+    // offline rule-based risk analyzer engine (practical context logic)
+    // -------------------------------------------------------------
+    function analyzeTextOffline(text) {
+      const sentences = splitIntoSentences(text);
+      const allWarnings = [];
+
+      function addWarn(list, sent, matchText, category, level, reason, suggestion, replacement, idxOverride = null) {
+        const idx = idxOverride !== null ? idxOverride : sent.text.indexOf(matchText);
+        if (idx < 0) return;
+        list.push({
+          id: "rule_" + category.replace(/[^a-zA-Z0-9ぁ-んァ-ヶ一-龠]/g, "_") + "_" + idx,
+          text: matchText,
+          category,
+          level,
+          reason,
+          suggestion,
+          replacement,
+          start: sent.start + idx,
+          end: sent.start + idx + matchText.length
+        });
+      }
+
+      function hasSafeQualifier(s) {
+        return /(おそらく|なんとなく|ように感じ|感じます|可能性|かもしれ|ありそう|気配|兆し|ご希望があれば|よければ|ご興味あれば|ご無理のない範囲|ご都合の良い|おすすめします|してみても良いかも)/.test(s);
+      }
+
+      function addRegexWarnings(list, sent, regex, builder) {
+        regex.lastIndex = 0;
+        let m;
+        while ((m = regex.exec(sent.text)) !== null) {
+          const w = builder(m);
+          if (!w) continue;
+          addWarn(list, sent, m[0], w.category, w.level, w.reason, w.suggestion, w.replacement, m.index);
+        }
+      }
+
+      sentences.forEach(sent => {
+        const s = sent.text;
+        const sentWarnings = [];
+
+        // ---------------------------------------------------------
+        // 0. OK exception rules based on current internal criteria
+        // ---------------------------------------------------------
+        if (s.includes("…かもしれなくて。") || s.includes("かもしれなくて。")) {
+          const phrase = s.includes("…かもしれなくて。") ? "…かもしれなくて。" : "かもしれなくて。";
+          addWarn(sentWarnings, sent, phrase, "余韻表現 (OK)", 1,
+            "余韻・ためらいを含む情緒表現であり、断定を避ける方向に働くため安全です。",
+            "修正不要です。", phrase);
+          allWarnings.push(...sentWarnings);
+          return;
+        }
+
+        if (s.includes("どうか、一人で抱え込まず、私に頼ってください")) {
+          addWarn(sentWarnings, sent, "どうか、一人で抱え込まず、私に頼ってください", "寄り添い表現 (OK)", 2,
+            "安心を与えるための寄り添い表現であり、鑑定の強要にはあたりません。",
+            "修正不要です。", "どうか、一人で抱え込まず、私に頼ってください");
+          allWarnings.push(...sentWarnings);
+          return;
+        }
+
+        if (/(無料メッセージ|無料テンプレート|初回無料分|無料枠|メッセージ枠)/.test(s)) {
+          const m = /(無料メッセージ|無料テンプレート|初回無料分|無料枠|メッセージ枠)/.exec(s);
+          addWarn(sentWarnings, sent, m[0], "システム機能への誘導 (OK)", 1,
+            "依頼の入り口となる基本システムの案内であり、有利誤認には該当しません。",
+            "修正不要です。", m[0], m.index);
+        }
+
+        const afterOpenContext = /(鑑定のご開封ありがとうございます|ご開封ありがとうございます|開封ありがとうございます|鑑定結果をご確認いただき|先ほどは鑑定|鑑定後|アフターサービス|補足文章)/.test(s);
+
+        // ---------------------------------------------------------
+        // 1. Anxiety / loss aversion
+        // ---------------------------------------------------------
+        addRegexWarnings(sentWarnings, sent, /(今日を逃すと叶わない|このタイミングを逃すとチャンスはない|今しないと効果がない|今日で最後|今しかない|今動かないと|取り返しがつかない|一生孤独|不幸になる|呪われる)/g, (m) => ({
+          category: "不安喚起",
+          level: /(一生孤独|不幸になる|呪われる|取り返しがつかない)/.test(m[0]) ? 5 : 4,
+          reason: "恐怖や焦り、機会損失を過度に助長する表現です。",
+          suggestion: "期限や恐怖で迫るのではなく、目標・きっかけ・任意性のある案内に調整してください。",
+          replacement: "必要だと感じたタイミングで、今の状況を一緒に整理していきましょう"
+        }));
+
+        addRegexWarnings(sentWarnings, sent, /(このままでは|このままだと|手遅れ|相手に異性がいる|失ってしまう|終わってしまう)/g, (m) => ({
+          category: "不安喚起",
+          level: /手遅れ|失ってしまう|終わってしまう/.test(m[0]) ? 4 : 3,
+          reason: "不安や焦りを強める可能性がある表現です。",
+          suggestion: "悪い未来を強く示すより、状況整理や可能性提示に寄せてください。",
+          replacement: "今の状況を一緒に整理していくことで"
+        }));
+
+        // 受付時間は予定都合ならOK。ただし効果や最後と結びつく場合は注意。
+        if (/(受付|待機|予約|対応).{0,20}(時まで|本日まで|今日まで)/.test(s) && !/(効果|叶わない|最後|今しかない|逃す)/.test(s)) {
+          const m = /(受付|待機|予約|対応).{0,20}(時まで|本日まで|今日まで)/.exec(s);
+          addWarn(sentWarnings, sent, m[0], "受付時間案内 (OK)", 1,
+            "鑑定師の予定による受付時間の案内であり、効果と結びつけていないため安全です。",
+            "修正不要です。", m[0], m.index);
+        }
+
+        // ---------------------------------------------------------
+        // 2. Assertion / deterministic wording
+        // ---------------------------------------------------------
+        addRegexWarnings(sentWarnings, sent, /(100%|絶対|必ず|確実に|間違いなく).{0,15}(叶う|復縁|成就|戻る|付き合|結ばれ|解決|好転|成功|愛して|好き|連絡が来る)/g, (m) => ({
+          category: "断定的判断",
+          level: /100%|確実に/.test(m[0]) ? 5 : 4,
+          reason: "不確実な未来や相手の気持ち、結果を断定しているため高リスクです。",
+          suggestion: "鑑定師の主観・可能性提示に留めてください。",
+          replacement: m[0].replace(/100%|絶対|必ず|確実に|間違いなく/g, "").replace(/叶う|成就|解決|好転|成功/g, "良い方向へ進む可能性がありそう").replace(/戻る/g, "戻る可能性がありそう")
+        }));
+
+        addRegexWarnings(sentWarnings, sent, /(絶対|必ず|確実に|間違いなく|完全に)/g, (m) => ({
+          category: "断定的判断 (注意)",
+          level: 3,
+          reason: "強い断定の副詞です。結果保証と組み合わさると高リスクになるため注意が必要です。",
+          suggestion: "「おそらく」「なんとなく」「〜の可能性がありそうです」などに調整してください。",
+          replacement: "可能性として"
+        }));
+
+        // 断定語尾。すべてを拾うと過検知するため、恋愛・結果文脈に限定。
+        addRegexWarnings(sentWarnings, sent, /(彼|相手|未来|復縁|関係|気持ち|流れ|運命|ご縁).{0,20}(になります|でした|です|と言えます)/g, (m) => {
+          if (hasSafeQualifier(s)) return null;
+          return {
+            category: "断定的判断",
+            level: 3,
+            reason: "不確定な鑑定内容を断定語尾で言い切っているように見えるため注意が必要です。",
+            suggestion: "「〜のように感じます」「〜の可能性がありそうです」に調整してください。",
+            replacement: m[0].replace(/になります|でした|です|と言えます/g, "のように感じます")
+          };
+        });
+
+        // ---------------------------------------------------------
+        // 3. Coercion
+        // ---------------------------------------------------------
+        addRegexWarnings(sentWarnings, sent, /(必ず|かならず|絶対に).{0,12}(返信|鑑定|相談|予約|連絡|開封).{0,8}(してください|して下さい|お願いします|受けて)/g, (m) => ({
+          category: "鑑定の強要",
+          level: 4,
+          reason: "断定的な副詞と依頼が組み合わさり、行動を強く義務付ける表現です。",
+          suggestion: "任意性を添えた柔らかい依頼に調整してください。",
+          replacement: "よければ、ご都合の良いタイミングでお声がけください"
+        }));
+
+        addRegexWarnings(sentWarnings, sent, /(しなければならない|しないといけない|するべき|すべき|受けるべき|開封するべき)/g, (m) => ({
+          category: "鑑定の強要",
+          level: 4,
+          reason: "相談者の行動を義務付ける表現であり、強要感が出ます。",
+          suggestion: "推奨・選択肢提示に調整してください。",
+          replacement: "してみても良いかもしれません"
+        }));
+
+        addRegexWarnings(sentWarnings, sent, /(今すぐ|10分以内|本日中|急いで).{0,12}(返信|鑑定|相談|予約|連絡|開封).{0,8}(してください|して下さい|お願いします|受けて)/g, (m) => ({
+          category: "鑑定の強要",
+          level: 4,
+          reason: "期限を区切って行動を迫っており、心理的な強制感があります。",
+          suggestion: "相談者のタイミングを尊重する表現にしてください。",
+          replacement: "ご都合の良いタイミングでお声がけください"
+        }));
+
+        addRegexWarnings(sentWarnings, sent, /(ぜひ|よければ|ご興味あれば)?(返信|鑑定|相談|予約|連絡|開封).{0,8}(してください|して下さい)/g, (m) => ({
+          category: "鑑定の強要 (注意)",
+          level: 3,
+          reason: "柔らかい依頼表現であり改善必須ではありませんが、文脈によっては案内が強く見える可能性があります。",
+          suggestion: "必要に応じて「ご無理のない範囲で」など任意性を添えるとより安全です。",
+          replacement: m[0]
+        }));
+
+        // ---------------------------------------------------------
+        // 4. Repetition / effect conditions
+        // ---------------------------------------------------------
+        addRegexWarnings(sentWarnings, sent, /(繰り返せば|繰り返すことで|続ければ|叶うまで|効果が出るまで|効果を出すために|併用すれば|効果が倍増|効果が上が|引き寄せられます)/g, (m) => ({
+          category: "施術の反復誘導",
+          level: /(効果が倍増|叶うまで|効果が出るまで)/.test(m[0]) ? 5 : 4,
+          reason: "施術の反復・併用・継続を効果の条件や効果増幅と結び付けているため高リスクです。",
+          suggestion: "施術を効果条件にせず、鑑定・フォローや選択肢として提示してください。",
+          replacement: "必要に応じて、今の状態に合う方法を一緒に見ていけます"
+        }));
+
+        addRegexWarnings(sentWarnings, sent, /(毎日|何度も|継続的に).{0,15}(施術|祈祷|波動修正|ヒーリング)/g, (m) => ({
+          category: "施術の反復誘導",
+          level: /効果|叶う|必須|必要/.test(s) ? 4 : 3,
+          reason: "施術の継続・反復に見えるため注意が必要です。効果条件と結びつく場合は高リスクです。",
+          suggestion: "お客様の選択肢として案内し、継続必須に見えない表現へ調整してください。",
+          replacement: "必要に応じて、今の状態に合わせて整える方法もあります"
+        }));
+
+        // ---------------------------------------------------------
+        // 5. Unauthorized reading / treatment
+        // ---------------------------------------------------------
+        addRegexWarnings(sentWarnings, sent, /(頼まれていませんが|勝手に|ご依頼前ですが|依頼前ですが).{0,20}(霊視|鑑定|施術|波動修正|ヒーリング|祈祷|視ました|視えました|送っておきました|しておきました)/g, (m) => ({
+          category: "無断施術・無断鑑定",
+          level: 5,
+          reason: "依頼のない鑑定・施術の実施を断定的に報告しているため禁止表現です。",
+          suggestion: "ご希望や同意を前提とした案内にしてください。",
+          replacement: "ご希望があれば、今の状態に合わせて一緒に見ていきます"
+        }));
+
+        addRegexWarnings(sentWarnings, sent, /(霊視|鑑定|施術|波動修正|ヒーリング|祈祷|お祓い|思念伝達).{0,8}(しておきました|しました|完了しました|送っておきました|行いました)/g, (m) => ({
+          category: "無断施術・無断鑑定",
+          level: afterOpenContext ? 3 : 4,
+          reason: afterOpenContext
+            ? "鑑定後文脈のため重大リスクは下がりますが、事前同意が曖昧に見える可能性があります。"
+            : "事前承諾のない施術・鑑定の事後報告に見えるため高リスクです。",
+          suggestion: "事前同意や希望を前提とした表現に調整してください。",
+          replacement: "ご希望があれば、今の状態に合わせて整えていきます"
+        }));
+
+        addRegexWarnings(sentWarnings, sent, /(視えました|見えました|浮かびました|感じ取りました|受け取りました)/g, (m) => ({
+          category: "無断施術・無断鑑定",
+          level: hasSafeQualifier(s) ? 2 : 4,
+          reason: hasSafeQualifier(s)
+            ? "主観的な情景描写に留まっているため、過度な無断鑑定リスクは低めです。"
+            : "依頼のない鑑定結果を断定的に報告しているように見えるため注意が必要です。",
+          suggestion: "「〜のように感じます」など主観化してください。",
+          replacement: "のように感じます"
+        }));
+
+        const concreteSceneCount = (s.match(/視えました|見えました|浮かびました|彼の姿|二人の姿|守護霊|魂の声|映像|未来の場面/g) || []).length;
+        if (concreteSceneCount >= 3) {
+          addWarn(sentWarnings, sent, s.trim(), "無断施術・無断鑑定", 4,
+            "具体的すぎる情景描写が同一メッセージ内で3回以上出ており、無断鑑定・断定報告に見えやすい構成です。",
+            "具体描写を減らし、主観的な可能性提示にしてください。",
+            s.trim().replace(/視えました|見えました|浮かびました/g, "感じます"));
+        }
+
+        // ---------------------------------------------------------
+        // 6. Misleading / free inducement / excessive superiority
+        // ---------------------------------------------------------
+        addRegexWarnings(sentWarnings, sent, /(通常|本来|定価|普段は|[0-9０-９一二三四五六七八九十]+万|[0-9０-９]+pts分).{0,20}(無料|0円|プレゼント|サービス|半額|割引)/g, (m) => ({
+          category: "有利誤認",
+          level: 5,
+          reason: "施術・特典に元値があるかのような比較表示であり、有利誤認リスクが非常に高い表現です。",
+          suggestion: "金銭的価値や通常価格との比較を削除してください。",
+          replacement: "必要に応じて補足としてご案内します"
+        }));
+
+        addRegexWarnings(sentWarnings, sent, /(完全無料|無料鑑定|無料施術|抽選で無料|300文字以上は無料|今だけ無料|本日限定で無料|今なら.*無料|プレゼントとして無料|ポイント不要で)/g, (m) => {
+          if (/(無料メッセージ|無料テンプレート|初回無料分|無料枠)/.test(m[0])) return null;
+          return {
+            category: "有利誤認",
+            level: /(完全無料|無料鑑定|無料施術|抽選で無料|300文字以上は無料|ポイント不要で)/.test(m[0]) ? 5 : 4,
+            reason: "無料・限定・特典を使った集客や勧誘に見えやすく、最新ルール上NGです。",
+            suggestion: "無料訴求を削除し、鑑定後の補足や通常の案内として表現してください。",
+            replacement: "必要に応じてご案内します"
+          };
+        });
+
+        addRegexWarnings(sentWarnings, sent, /(無料|0円|プレゼント|サービス|ポイント不要).{0,12}(鑑定|施術|補足|特典|波動修正|ヒーリング|祈祷)|(鑑定|施術|補足|特典|波動修正|ヒーリング|祈祷).{0,12}(無料|0円|プレゼント|サービス|ポイント不要)/g, (m) => {
+          if (/(無料メッセージ|無料テンプレート|初回無料分|無料枠)/.test(m[0])) return null;
+          return {
+            category: "有利誤認",
+            level: afterOpenContext ? 3 : 5,
+            reason: afterOpenContext
+              ? "鑑定開封後のアフターサービス文脈であれば許容される余地がありますが、無料訴求は慎重な扱いが必要です。"
+              : "鑑定・開封前のアプローチで、施術・特典・鑑定を無料訴求することは最新ルール上NGです。",
+            suggestion: "開封前の無料訴求や付加サービス予告を削除してください。",
+            replacement: afterOpenContext ? "補足としてご案内します" : "必要に応じてご案内します"
+          };
+        });
+
+        addRegexWarnings(sentWarnings, sent, /(私にしかできない|他の占い師にはできない|唯一無二|誰にも真似できない)/g, (m) => ({
+          category: "有利誤認",
+          level: 4,
+          reason: "他者比較による過度な優位性の主張に見えます。",
+          suggestion: "自分の鑑定スタイルの説明に留めてください。",
+          replacement: "私なりの視点で丁寧に見ていきます"
+        }));
+
+        addRegexWarnings(sentWarnings, sent, /(満月|新月|一粒万倍日|天赦日|吉日).{0,15}(効果は絶大|効果が倍増|必ず叶う|成就します)/g, (m) => ({
+          category: "有利誤認",
+          level: 4,
+          reason: "自然現象や暦を根拠に効果を保証・増幅しているように見えます。",
+          suggestion: "暦や自然現象は、効果保証ではなくきっかけとして扱ってください。",
+          replacement: "良いきっかけとして、今の気持ちを整えていきましょう"
+        }));
+
+        // ---------------------------------------------------------
+        // 7. Spiritual procedures / future decision authority / dependence
+        // ---------------------------------------------------------
+        addRegexWarnings(sentWarnings, sent, /(魂|守護霊).{0,20}(交渉|婚姻届|結婚式|手続き|返答|返事をもら|会話|直接話)/g, (m) => ({
+          category: "有利誤認",
+          level: 5,
+          reason: "相手の魂・守護霊に対して、鑑定師が具体的な手続き・交渉・返答の仲介を行うかのように見えるため禁止表現です。",
+          suggestion: "鑑定師が感じたことの解釈として伝える表現にしてください。",
+          replacement: "お二人の流れについて、私が感じ取ったことをお伝えします"
+        }));
+
+        addRegexWarnings(sentWarnings, sent, /(あなたの気持ちを|想いを).{0,10}(相手|彼).{0,10}(伝えました|返事が来ました|こう言っています|と言っています)/g, (m) => ({
+          category: "有利誤認",
+          level: 4,
+          reason: "鑑定師を通して相手と直接会話できるかのように見えるため高リスクです。",
+          suggestion: "思念伝達は可能でも、相手からの返答を具体文として断定しないでください。",
+          replacement: "あなたの想いが届きやすくなるよう、私なりに整えていきます"
+        }));
+
+        addRegexWarnings(sentWarnings, sent, /(私が決めます|私に任せておけば|あなたは何もしなくていい|努力は不要|責任を持って叶えます|私が未来を変えます)/g, (m) => ({
+          category: "有利誤認",
+          level: 5,
+          reason: "利用者自身が判断すべき未来や選択について、鑑定師が決定権・責任を持つように見せる構成です。",
+          suggestion: "利用者の任意性と行動選択を尊重する表現にしてください。",
+          replacement: "一緒に可能性を整理しながら、あなたに合う進め方を見つけていきましょう"
+        }));
+
+        // ---------------------------------------------------------
+        // 8. Compound risk level boost
+        // ---------------------------------------------------------
+        const highRiskWarns = sentWarnings.filter(w => w.level >= 3);
+        const uniqueCategories = [...new Set(highRiskWarns.map(w => {
+          if (w.category.includes("不安喚起")) return "不安喚起";
+          if (w.category.includes("断定的判断")) return "断定的判断";
+          if (w.category.includes("鑑定の強要")) return "鑑定の強要";
+          if (w.category.includes("施術の反復誘導")) return "施術の反復誘導";
+          if (w.category.includes("無断施術")) return "無断施術・無断鑑定";
+          if (w.category.includes("有利誤認")) return "有利誤認";
+          return w.category;
+        }))];
+
+        if (uniqueCategories.length >= 2) {
+          let highestWarn = highRiskWarns[0];
+          highRiskWarns.forEach(w => {
+            if (w.level > highestWarn.level) highestWarn = w;
+          });
+          const oldLevel = highestWarn.level;
+          highestWarn.level = Math.min(5, highestWarn.level + 1);
+          highestWarn.reason = `【重複リスク加算】同一文内に複数の異なるリスク（${uniqueCategories.join("・")}）が重なったため、警戒レベルを Lv${oldLevel} から Lv${highestWarn.level} に引き上げています。 ${highestWarn.reason}`;
+        }
+
+        allWarnings.push(...sentWarnings);
+      });
+
+      // Sort and filter overlaps. Keep the higher risk item when overlapping.
+      allWarnings.sort((a, b) => a.start - b.start || b.level - a.level);
+      const filteredWarnings = [];
+      allWarnings.forEach(warn => {
+        const overlapIndex = filteredWarnings.findIndex(fw => warn.start < fw.end && warn.end > fw.start);
+        if (overlapIndex === -1) {
+          filteredWarnings.push(warn);
+        } else if (warn.level > filteredWarnings[overlapIndex].level) {
+          filteredWarnings[overlapIndex] = warn;
+        }
+      });
+      filteredWarnings.sort((a, b) => a.start - b.start);
+
+      // Calculate Risks per Axis
+      const risks = {
+        anxiety: { level: 1, reason: "不安を煽る表現はありません。" },
+        assertion: { level: 1, reason: "断定的な表現はありません。" },
+        coercion: { level: 1, reason: "強要・威圧的な表現はありません。" },
+        repetition: { level: 1, reason: "施術の反復や効果条件化はありません。" },
+        unauthorized: { level: 1, reason: "無断での鑑定・施術の報告はありません。" },
+        misleading: { level: 1, reason: "無料訴求・二重価格表示などの有利誤認リスクはありません。" }
+      };
+
+      const categoryMap = {
+        "不安喚起": "anxiety",
+        "断定的判断": "assertion",
+        "断定的判断 (注意)": "assertion",
+        "鑑定の強要": "coercion",
+        "鑑定の強要 (注意)": "coercion",
+        "施術の反復誘導": "repetition",
+        "無断施術・無断鑑定": "unauthorized",
+        "有利誤認": "misleading"
+      };
+
+      filteredWarnings.forEach(warn => {
+        const key = categoryMap[warn.category];
+        if (key && risks[key] && warn.level > risks[key].level) {
+          risks[key].level = warn.level;
+          risks[key].reason = warn.reason;
+        }
+      });
+
+      // Highlight and replacement pass
+      let highlightedText = "";
+      let afterText = "";
+      let lastIdx = 0;
+      let lastIdxAfter = 0;
+      const activeWarnings = [...filteredWarnings].sort((a, b) => a.start - b.start);
+
+      activeWarnings.forEach(warn => {
+        highlightedText += escapeHTML(text.substring(lastIdx, warn.start));
+        let hlClass = warn.level <= 2 ? "highlight-green" : "highlight-red";
+        highlightedText += `<span class="${hlClass}" title="[${warn.category} Lv${warn.level}] ${warn.reason}">${escapeHTML(warn.text)}</span>`;
+        lastIdx = warn.end;
+
+        afterText += text.substring(lastIdxAfter, warn.start);
+        // Only auto-replace Lv4+ items. Lv3 and OK items remain as-is.
+        afterText += warn.level >= 4 ? warn.replacement : warn.text;
+        lastIdxAfter = warn.end;
+      });
+
+      highlightedText += escapeHTML(text.substring(lastIdx));
+      afterText += text.substring(lastIdxAfter);
+
+      return {
+        risks,
+        warnings: activeWarnings,
+        highlightedText,
+        improvedText: afterText
+      };
+    }
+
+    // -------------------------------------------------------------
+    // Gemini API caller
+    // -------------------------------------------------------------
+    async function callGeminiAPI(promptText) {
+      if (!AppState.geminiKey) {
+        alert("設定画面でGemini APIキーを入力するか、エンジンを「ローカル判定」に設定してください。");
+        switchTab('settings');
+        throw new Error("Missing API Key");
+      }
+
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${AppState.geminiKey}`;
+      const payload = {
+        contents: [{ parts: [{ text: promptText }] }],
+        generationConfig: { responseMimeType: "application/json" }
+      };
+
+      try {
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+          const errData = await response.json();
+          throw new Error(errData.error?.message || "通信エラーが発生しました");
+        }
+
+        const data = await response.json();
+        const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (!responseText) throw new Error("レスポンスの解析に失敗しました");
+
+        return JSON.parse(responseText);
+      } catch (error) {
+        console.error("Gemini API Error:", error);
+        alert("Gemini接続エラー: " + error.message);
+        throw error;
+      }
+    }
+
+    // -------------------------------------------------------------
+    // Feature 1: Sales Text Generation (文面作成)
+    // -------------------------------------------------------------
+    async function generateText() {
+      const theme = getActiveChipValue('create-theme-chips');
+      const purpose = document.getElementById('create-purpose').value;
+      const style = getActiveChipValue('create-style-chips');
+      const situation = document.getElementById('create-situation').value.trim();
+
+      const btnGen = document.getElementById('btn-generate-text');
+      const loadingEl = document.getElementById('create-loading');
+      const resultPanel = document.getElementById('create-result-panel');
+      const resultContent = document.getElementById('generated-text-content');
+
+      btnGen.disabled = true;
+      loadingEl.style.display = 'flex';
+      resultPanel.style.display = 'none';
+
+      if (AppState.engine === 'local') {
+        setTimeout(() => {
+          try {
+            const text = clientSideGenerateText(theme, purpose, style, situation);
+            resultContent.innerText = text;
+            resultPanel.style.display = 'block';
+
+            AppState.stats.created += 1;
+            localStorage.setItem('stellatext_stat_created', AppState.stats.created.toString());
+            updateStatsUI();
+
+            showToast("営業文をローカルで自動作成しました！");
+            setTimeout(() => {
+              resultPanel.scrollIntoView({ behavior: 'smooth' });
+            }, 100);
+          } catch (err) {
+            alert(err.message);
+          } finally {
+            btnGen.disabled = false;
+            loadingEl.style.display = 'none';
+          }
+        }, 400);
+      } else {
+        const prompt = `あなたはプロ占い師のアドバイザー・文面作成サポーターです。
+以下の要件に基づいて、占いのお客さま（相談者）へ送る、親身で魅力的なメッセージ（営業文・フォロー文）を1つ生成してください。
+
+## 要件:
+- 相談テーマ: ${theme}
+- 送信目的: ${purpose}
+- 希望する文体・トーン: ${style}
+- 相談者の状況や盛り込みたい詳細: ${situation || "特になし。標準的な内容で作成してください。"}
+
+## 社内ルール・表現方針（必ず順守してください）:
+1. 相手の気持ちに寄り添い、優しく神秘的、あるいははっきりとした先生の個性（スタイル：${style}）を反映させること。
+2. 「…かもしれなくて。」という余韻表現は、占い師らしい情緒的な文体として積極的に使っても良い。
+3. 「どうか、一人で抱え込まず、私に頼ってください」という表現は、強要ではなく温かい寄り添いとして許容されます。
+4. 「無料で施術します」等の表現は、価格を誇張した二重価格（有利誤認）や限定的な煽りがなければそのまま使用可能です。
+5. 他の人を不幸にしたり、呪ったりするような表現（第三者の不幸を願う施術など）は絶対に盛り込まないでください。
+6. 単に丁寧語でフラットにするのではなく、それぞれの占術の先生らしい個性・情緒感のある表現を活かしてください。
+
+## 出力フォーマット:
+以下のJSON形式で必ず返答してください。余分な説明などは含めず、純粋なJSONのみを返却してください。
+{
+  "generatedText": "生成された本文（改行コード \\n を含める）"
+}`;
+
+        try {
+          const result = await callGeminiAPI(prompt);
+          if (result && result.generatedText) {
+            resultContent.innerText = result.generatedText;
+            resultPanel.style.display = 'block';
+
+            AppState.stats.created += 1;
+            localStorage.setItem('stellatext_stat_created', AppState.stats.created.toString());
+            updateStatsUI();
+
+            showToast("営業文をAIで自動作成しました！");
+            setTimeout(() => {
+              resultPanel.scrollIntoView({ behavior: 'smooth' });
+            }, 100);
+          }
+        } catch (err) {
+          console.error(err);
+        } finally {
+          btnGen.disabled = false;
+          loadingEl.style.display = 'none';
+        }
+      }
+    }
+
+    function copyGeneratedText() {
+      const text = document.getElementById('generated-text-content').innerText;
+      navigator.clipboard.writeText(text).then(() => {
+        showToast("コピーしました！");
+      });
+    }
+
+    function sendToCheckAndAnalyze() {
+      const generatedText = document.getElementById('generated-text-content').innerText;
+      document.getElementById('check-input-text').value = generatedText;
+      switchTab('check');
+      checkRisk();
+    }
+
+    // -------------------------------------------------------------
+    // Feature 2 & 3: Risk Check & Optimize (送信前チェック & 改善)
+    // -------------------------------------------------------------
+    function clearCheckInput() {
+      document.getElementById('check-input-text').value = '';
+    }
+
+    async function checkRisk() {
+      const text = document.getElementById('check-input-text').value.trim();
+      if (!text) {
+        alert("チェックするテキストを入力してください。");
+        return;
+      }
+
+      const btnCheck = document.getElementById('btn-check-risk');
+      const loadingEl = document.getElementById('check-loading');
+      const resultsArea = document.getElementById('check-results-area');
+
+      btnCheck.disabled = true;
+      loadingEl.style.display = 'flex';
+      resultsArea.style.display = 'none';
+
+      if (AppState.engine === 'local') {
+        setTimeout(() => {
+          try {
+            const result = analyzeTextOffline(text);
+            AppState.currentCheckResult = result;
+            
+            renderRiskMeters(result.risks);
+            renderWarnings(result.warnings);
+            renderBeforeAfter(text, result.warnings, result.improvedText);
+
+            resultsArea.style.display = 'block';
+
+            AppState.stats.checked += 1;
+            localStorage.setItem('stellatext_stat_checked', AppState.stats.checked.toString());
+            updateStatsUI();
+
+            showToast("ローカル診断が完了しました！");
+            setTimeout(() => {
+              resultsArea.scrollIntoView({ behavior: 'smooth' });
+            }, 100);
+          } catch (err) {
+            alert("ローカル判定エラー: " + err.message);
+          } finally {
+            btnCheck.disabled = false;
+            loadingEl.style.display = 'none';
+          }
+        }, 400);
+      } else {
+        const prompt = `あなたはプロ占い師の送信前チェック担当および文章推敲アドバイザーです。
+占い師が入力した「Before（原文）」を、6つの法的・モラル的なリスク観点で判定し、問題箇所を特定したうえで、先生らしさを最大限に活かした「After（改善案）」の文章を作成してください。
+
+Before (原文):
+"""
+${text}
+"""
+
+## リスク分析の6観点と判定基準:
+1. 不安喚起 (anxiety) - 顧客に強い恐怖や不安を植え付けて行動を誘導していないか (Lv1-5)
+2. 断定的判断 (assertion) - 不確実な未来について「絶対」「必ず」と言い切っていないか (Lv1-5)
+3. 鑑定の強要 (coercion) - 相談を受けるよう脅迫的に促したり強要していないか (Lv1-5)
+4. 施術の反復誘導 (repetition) - ヒーリング等を何度も繰り返すように促し、過剰課金を誘発していないか (Lv1-5)
+5. 無断施術・無断鑑定 (unauthorized) - 頼まれていない霊視などを勝手に行って不安を与えていないか (Lv1-5)
+6. 有利誤認 (misleading) - 二重価格表示（通常3万円のところ今だけ無料）など不当に有利に見せかけていないか (Lv1-5)
+
+※Lv1が安全（懸念なし）、Lv3が注意（表現の見直し推奨）、Lv5が危険（重大な法令違反・ガイドライン抵触リスク）とします。
+
+## 特別な社内ルール（判定の特例）:
+- 「…かもしれなくて。」のような余韻・ためらい表現は、情緒表現として安全（Lv1）であり、決して修正せず残してください。
+- 「どうか、一人で抱え込まず、私に頼ってください」は、心を開いてもらうための温かい呼びかけであり、強要にはあたらない（Lv1）ため、修正せず残してください。
+- 「無料で施術します」は、二重価格表示（例：通常3万円を無料に）や、過度な限定煽り（今から10分以内に返信しなければ無料は取り消し、など）がなければ、通常のプレゼント企画としてOKです。
+- 「通常3万円の施術を無料」という対比表現は、有利誤認リスクが極めて高い（Lv4以上）とみなし、修正対象にしてください。
+- 第三者を呪う、不幸にするような悪意のある施術表現は絶対にNG（Lv5）とし、健全な施術表現に書き換えるか削除してください。
+
+## 改善案 (After文) 作成のガイドライン:
+- 原文の語彙、文体、温度感、先生特有 of キャラクター性（先生らしさ）をできる限り保持してください。
+- リスクのある箇所（危ない表現）だけを最小限修正してください。
+- 全体を一律の機械的な丁寧語（「です・ます」調などの事務的なもの）へ書き換えないでください。先生らしさを最優先します。
+- After文はそのままコピーして送信できる完成された文章にしてください。
+
+## 返却フォーマット:
+必ず以下のJSON形式で返答してください。余計な文字列を含めず、ピュアなJSONのみを返却してください。
+{
+  "risks": {
+    "anxiety": { "level": 1, "reason": "不安を煽る表現はありません。" },
+    "assertion": { "level": 2, "reason": "絶対という表現に近い箇所があります。" },
+    "coercion": { "level": 1, "reason": "強要表現はありません。" },
+    "repetition": { "level": 1, "reason": "反復誘導はありません。" },
+    "unauthorized": { "level": 1, "reason": "無断施術はありません。" },
+    "misleading": { "level": 1, "reason": "有利誤認はありません。" }
+  },
+  "warnings": [
+    {
+      "text": "元の危険表現の該当文字列",
+      "category": "不安喚起 などのカテゴリ名",
+      "level": 4,
+      "reason": "なぜこれが問題なのかのわかりやすい説明"
+    }
+  ],
+  "improvedText": "最小限の修正を行った、そのまま送信できるAfter文（改行コード \\n を含める）"
+}`;
+
+        try {
+          const result = await callGeminiAPI(prompt);
+          if (result) {
+            AppState.currentCheckResult = result;
+            
+            renderRiskMeters(result.risks);
+            renderWarnings(result.warnings);
+            renderBeforeAfter(text, result.warnings, result.improvedText);
+
+            resultsArea.style.display = 'block';
+
+            AppState.stats.checked += 1;
+            localStorage.setItem('stellatext_stat_checked', AppState.stats.checked.toString());
+            updateStatsUI();
+
+            showToast("AIリスク診断が完了しました！");
+            setTimeout(() => {
+              resultsArea.scrollIntoView({ behavior: 'smooth' });
+            }, 100);
+          }
+        } catch (err) {
+          console.error(err);
+        } finally {
+          btnCheck.disabled = false;
+          loadingEl.style.display = 'none';
+        }
+      }
+    }
+
+    function renderRiskMeters(risks) {
+      const container = document.getElementById('risk-meters-container');
+      container.innerHTML = '';
+
+      const labels = {
+        anxiety: "不安喚起",
+        assertion: "断定的判断",
+        coercion: "鑑定の強要",
+        repetition: "施術の反復誘導",
+        unauthorized: "無断施術・無断鑑定",
+        misleading: "有利誤認"
+      };
+
+      Object.keys(risks).forEach(key => {
+        const risk = risks[key];
+        const label = labels[key] || key;
+        const level = risk.level;
+        
+        let badgeClass = 'level-safe';
+        if (level >= 4) badgeClass = 'level-danger';
+        else if (level >= 3) badgeClass = 'level-warn';
+
+        let starsHtml = '';
+        for (let s = 1; s <= 5; s++) {
+          starsHtml += `<span class="risk-star ${s <= level ? 'filled' : ''}">★</span>`;
+        }
+
+        const meterHtml = `
+          <div class="risk-meter">
+            <div class="risk-label">${label}</div>
+            <div class="risk-stars">${starsHtml}</div>
+            <span class="risk-level-badge ${badgeClass}">Lv${level}</span>
+          </div>
+        `;
+        container.insertAdjacentHTML('beforeend', meterHtml);
+      });
+    }
+
+    function renderWarnings(warnings) {
+      const container = document.getElementById('warnings-list-container');
+      const panel = document.getElementById('warnings-panel');
+      container.innerHTML = '';
+
+      if (!warnings || warnings.length === 0) {
+        panel.style.display = 'none';
+        return;
+      }
+
+      panel.style.display = 'block';
+      AppState.lastWarnings = warnings;
+
+      let tableHtml = `
+        <div class="warnings-table-wrapper">
+          <table class="warnings-table">
+            <thead>
+              <tr>
+                <th>該当表現</th>
+                <th>該当観点</th>
+                <th>リスクLv</th>
+                <th>理由</th>
+                <th>改善候補</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+      `;
+
+      warnings.forEach((warn, index) => {
+        let textStyleClass = "td-expr";
+        let badgeClass = "level-safe";
+        
+        if (warn.level >= 4) {
+          badgeClass = "level-danger";
+        } else if (warn.level === 3) {
+          badgeClass = "level-warn";
+          textStyleClass = "td-expr warn-only";
+        } else {
+          textStyleClass = "td-expr safe-only";
+        }
+
+        tableHtml += `
+          <tr>
+            <td class="${textStyleClass}">"${escapeHTML(warn.text)}"</td>
+            <td><strong>${escapeHTML(warn.category)}</strong></td>
+            <td><span class="risk-level-badge ${badgeClass}">Lv${warn.level}</span></td>
+            <td class="td-reason">${escapeHTML(warn.reason)}</td>
+            <td><code style="background: rgba(16, 185, 129, 0.15); color: var(--risk-safe); padding: 4px 8px; border-radius: 4px; display: inline-block;">${escapeHTML(warn.replacement || "修正不要")}</code></td>
+            <td>
+              <button class="btn btn-secondary btn-sm" onclick="copyWarningSuggestion(${index})" style="padding: 6px 10px; font-size: 11px; display: inline-flex; gap: 4px; align-items: center;">
+                <i data-lucide="copy" style="width: 12px; height: 12px;"></i> コピー
+              </button>
+            </td>
+          </tr>
+        `;
+      });
+
+      tableHtml += `
+            </tbody>
+          </table>
+        </div>
+      `;
+
+      container.innerHTML = tableHtml;
+      lucide.createIcons();
+    }
+
+    function copyWarningSuggestion(index) {
+      const warn = AppState.lastWarnings[index];
+      if (warn && warn.replacement) {
+        navigator.clipboard.writeText(warn.replacement).then(() => {
+          showToast("改善候補フレーズをコピーしました！");
+        });
+      } else {
+        showToast("コピーできるフレーズがありません。");
+      }
+    }
+
+    function renderBeforeAfter(beforeText, warnings, afterText) {
+      const beforePanel = document.getElementById('panel-before-text');
+      const afterPanel = document.getElementById('panel-after-text');
+
+      if (AppState.engine === 'local') {
+        const localResult = analyzeTextOffline(beforeText);
+        beforePanel.innerHTML = localResult.highlightedText;
+        afterPanel.innerText = localResult.improvedText;
+      } else {
+        let highlightedBefore = beforeText;
+        if (warnings && warnings.length > 0) {
+          const sortedWarns = [...warnings].sort((a, b) => b.text.length - a.text.length);
+          sortedWarns.forEach(warn => {
+            if (warn.text) {
+              const escaped = warn.text.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+              const regex = new RegExp(escaped, 'g');
+              highlightedBefore = highlightedBefore.replace(regex, `<span class="highlight-red" title="[${warn.category} Lv${warn.level}] ${warn.reason}">${escapeHTML(warn.text)}</span>`);
+            }
+          });
+        }
+        beforePanel.innerHTML = highlightedBefore;
+        afterPanel.innerText = afterText;
+      }
+    }
+
+    function copyImprovedText() {
+      const text = document.getElementById('panel-after-text').innerText;
+      navigator.clipboard.writeText(text).then(() => {
+        showToast("After文（改善案）をコピーしました！");
+      });
+    }
+
+    // -------------------------------------------------------------
+    // Feature 4: Template CRUD
+    // -------------------------------------------------------------
+    function loadTemplates() {
+      const stored = localStorage.getItem('stellatext_templates');
+      if (stored) {
+        AppState.templates = JSON.parse(stored);
+      } else {
+        AppState.templates = [...DefaultTemplates];
+        saveTemplatesToStorage();
+      }
+    }
+
+    function saveTemplatesToStorage() {
+      localStorage.setItem('stellatext_templates', JSON.stringify(AppState.templates));
+      updateStatsUI();
+    }
+
+    function updateStatsUI() {
+      const templatesCountEl = document.getElementById('stat-count-templates');
+      if (templatesCountEl) templatesCountEl.innerText = AppState.templates.length;
+      
+      const createdCountEl = document.getElementById('stat-count-created');
+      if (createdCountEl) createdCountEl.innerText = AppState.stats.created;
+      
+      const checkedCountEl = document.getElementById('stat-count-checked');
+      if (checkedCountEl) checkedCountEl.innerText = AppState.stats.checked;
+    }
+
+    function saveTemplateFromCheck() {
+      const text = document.getElementById('panel-after-text').innerText;
+      if (!text) return;
+
+      document.getElementById('modal-body-text').value = text;
+      document.getElementById('modal-title').value = '';
+
+      const themeContainer = document.getElementById('modal-theme-chips');
+      themeContainer.innerHTML = '';
+      ConsultThemes.forEach(theme => {
+        themeContainer.insertAdjacentHTML('beforeend', `<button class="chip-btn" data-value="${theme}">${theme}</button>`);
+      });
+      themeContainer.querySelector('.chip-btn').classList.add('active');
+      setupChipHandlers('modal-theme-chips');
+
+      const purposeContainer = document.getElementById('modal-purpose-chips');
+      purposeContainer.innerHTML = '';
+      SendPurposes.forEach(purpose => {
+        purposeContainer.insertAdjacentHTML('beforeend', `<button class="chip-btn" data-value="${purpose}">${purpose}</button>`);
+      });
+      purposeContainer.querySelector('.chip-btn').classList.add('active');
+      setupChipHandlers('modal-purpose-chips');
+
+      document.getElementById('save-template-modal').classList.add('active');
+    }
+
+    function closeSaveModal() {
+      document.getElementById('save-template-modal').classList.remove('active');
+    }
+
+    function confirmSaveTemplate() {
+      const title = document.getElementById('modal-title').value.trim() || '無題のテンプレート';
+      const theme = getActiveChipValue('modal-theme-chips');
+      const purpose = getActiveChipValue('modal-purpose-chips');
+      const body = document.getElementById('modal-body-text').value;
+
+      const newTpl = {
+        id: 'tpl_' + Date.now(),
+        title,
+        theme,
+        purpose,
+        body,
+        created_at: new Date().toISOString()
+      };
+
+      AppState.templates.unshift(newTpl);
+      saveTemplatesToStorage();
+
+      closeSaveModal();
+      showToast("テンプレートを保存しました！");
+      switchTab('templates');
+    }
+
+    function renderTemplates() {
+      const container = document.getElementById('templates-grid-container');
+      const emptyState = document.getElementById('templates-empty-state');
+      const searchQuery = document.getElementById('templates-search-input').value.toLowerCase().trim();
+
+      container.innerHTML = '';
+
+      const filtered = AppState.templates.filter(tpl => {
+        if (!searchQuery) return true;
+        return (
+          tpl.title.toLowerCase().includes(searchQuery) ||
+          tpl.body.toLowerCase().includes(searchQuery) ||
+          tpl.theme.toLowerCase().includes(searchQuery) ||
+          tpl.purpose.toLowerCase().includes(searchQuery)
+        );
+      });
+
+      if (filtered.length === 0) {
+        emptyState.style.display = 'block';
+        return;
+      }
+
+      emptyState.style.display = 'none';
+
+      filtered.forEach(tpl => {
+        const formattedDate = new Date(tpl.created_at).toLocaleDateString('ja-JP', {
+          year: 'numeric', month: '2-digit', day: '2-digit'
+        });
+
+        const cardHtml = `
+          <div class="template-card" id="card-${tpl.id}">
+            <div>
+              <div class="template-tag-row">
+                <span class="tag-badge">${tpl.theme}</span>
+                <span class="tag-badge purpose">${tpl.purpose}</span>
+              </div>
+              <h3 class="template-title">${escapeHTML(tpl.title)}</h3>
+              <div class="template-body">${escapeHTML(tpl.body)}</div>
+            </div>
+            <div class="template-footer">
+              <span class="template-date">${formattedDate}</span>
+              <div class="template-actions">
+                <button class="action-icon-btn" onclick="copyTemplateText('${tpl.id}')" title="コピー">
+                  <i data-lucide="copy" style="width: 14px; height: 14px;"></i>
+                </button>
+                <button class="action-icon-btn" onclick="sendTemplateToCheck('${tpl.id}')" title="チェックへ送る">
+                  <i data-lucide="shield-alert" style="width: 14px; height: 14px;"></i>
+                </button>
+                <button class="action-icon-btn delete" onclick="deleteTemplate('${tpl.id}')" title="削除">
+                  <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+        container.insertAdjacentHTML('beforeend', cardHtml);
+      });
+
+      lucide.createIcons();
+    }
+
+    function copyTemplateText(id) {
+      const tpl = AppState.templates.find(t => t.id === id);
+      if (tpl) {
+        navigator.clipboard.writeText(tpl.body).then(() => {
+          showToast("コピーしました！");
+        });
+      }
+    }
+
+    function sendTemplateToCheck(id) {
+      const tpl = AppState.templates.find(t => t.id === id);
+      if (tpl) {
+        document.getElementById('check-input-text').value = tpl.body;
+        switchTab('check');
+        showToast("テキストを送信前チェックにロードしました。");
+      }
+    }
+
+    function deleteTemplate(id) {
+      if (confirm("このテンプレートを削除してよろしいですか？")) {
+        AppState.templates = AppState.templates.filter(t => t.id !== id);
+        saveTemplatesToStorage();
+        renderTemplates();
+        showToast("テンプレートを削除しました。");
+      }
+    }
+
+    function escapeHTML(str) {
+      return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    // -------------------------------------------------------------
+    // Feature 5: Settings
+    // -------------------------------------------------------------
+    function saveSettings() {
+      const engine = document.getElementById('settings-engine').value;
+      const key = document.getElementById('settings-gemini-key').value.trim();
+      const sbUrl = document.getElementById('settings-supabase-url').value.trim();
+      const sbKey = document.getElementById('settings-supabase-key').value.trim();
+
+      AppState.engine = engine;
+      AppState.geminiKey = key;
+      AppState.supabaseUrl = sbUrl;
+      AppState.supabaseKey = sbKey;
+
+      localStorage.setItem('stellatext_engine', engine);
+      localStorage.setItem('stellatext_gemini_key', key);
+      localStorage.setItem('stellatext_sb_url', sbUrl);
+      localStorage.setItem('stellatext_sb_key', sbKey);
+
+      showToast("設定を保存しました！");
+      switchTab('home');
+    }
+
+    function clearAllData() {
+      if (confirm("全ての保存データ、統計、キーが削除されます。よろしいですか？")) {
+        localStorage.clear();
+        AppState.engine = 'local';
+        AppState.geminiKey = '';
+        AppState.supabaseUrl = '';
+        AppState.supabaseKey = '';
+        AppState.templates = [];
+        AppState.stats = { created: 0, checked: 0 };
+
+        document.getElementById('settings-engine').value = 'local';
+        document.getElementById('settings-gemini-key').value = '';
+        document.getElementById('settings-supabase-url').value = '';
+        document.getElementById('settings-supabase-key').value = '';
+
+        toggleEngineFields();
+        saveTemplatesToStorage();
+        updateStatsUI();
+
+        showToast("リセットしました。");
+        switchTab('home');
+      }
+    }
+  </script>
+</body>
+</html>
